@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(npm i:*)",
+      "Bash(nest new:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(npx create-react-app:*)",
+      "Bash(npm create:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)"
+    ],
+    "deny": []
+  }
+}

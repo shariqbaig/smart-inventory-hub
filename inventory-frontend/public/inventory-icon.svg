@@ -1,0 +1,49 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Modern gradient background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0F4C8C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3182ce;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="boxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0f4f8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded square background -->
+  <rect width="32" height="32" rx="6" fill="url(#bgGradient)"/>
+  
+  <!-- 3D Inventory box stack -->
+  <!-- Bottom box -->
+  <g transform="translate(6, 18)">
+    <path d="M0 2 L7 0 L20 0 L13 2 Z" fill="#e2e8f0"/>
+    <path d="M0 2 L0 8 L13 8 L13 2 Z" fill="#ffffff"/>
+    <path d="M13 2 L20 0 L20 6 L13 8 Z" fill="#cbd5e0"/>
+  </g>
+  
+  <!-- Middle box -->
+  <g transform="translate(6, 13)">
+    <path d="M0 2 L7 0 L20 0 L13 2 Z" fill="#e2e8f0"/>
+    <path d="M0 2 L0 8 L13 8 L13 2 Z" fill="#ffffff"/>
+    <path d="M13 2 L20 0 L20 6 L13 8 Z" fill="#cbd5e0"/>
+  </g>
+  
+  <!-- Top box with accent -->
+  <g transform="translate(6, 8)">
+    <path d="M0 2 L7 0 L20 0 L13 2 Z" fill="#fbbf24"/>
+    <path d="M0 2 L0 8 L13 8 L13 2 Z" fill="#fde68a"/>
+    <path d="M13 2 L20 0 L20 6 L13 8 Z" fill="#f59e0b"/>
+    
+    <!-- Chart icon on top box -->
+    <g transform="translate(3, 4)">
+      <rect x="0" y="0" width="1.5" height="3" fill="#0F4C8C" opacity="0.8"/>
+      <rect x="2.5" y="1" width="1.5" height="2" fill="#0F4C8C" opacity="0.8"/>
+      <rect x="5" y="-1" width="1.5" height="4" fill="#0F4C8C" opacity="0.8"/>
+    </g>
+  </g>
+  
+  <!-- Small sparkle for modern touch -->
+  <circle cx="24" cy="8" r="1" fill="white" opacity="0.8"/>
+  <circle cx="26" cy="10" r="0.5" fill="white" opacity="0.6"/>
+</svg>

@@ -1,0 +1,115 @@
+/* Chart theme styles for light and dark modes */
+
+/* Custom tooltip styles that work with themes */
+.custom-tooltip {
+  background: var(--chart-tooltip-bg, var(--bg-card)) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  box-shadow: var(--shadow-lg) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.tooltip-label {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  margin: 0 0 8px 0 !important;
+  font-size: 14px !important;
+}
+
+.tooltip-value {
+  color: var(--text-secondary) !important;
+  margin: 4px 0 !important;
+  font-size: 13px !important;
+}
+
+.tooltip-hint {
+  color: var(--text-tertiary) !important;
+  font-size: 12px !important;
+  margin: 8px 0 0 0 !important;
+  font-style: italic !important;
+}
+
+/* Tooltip color classes for different data types */
+.tooltip-total {
+  color: var(--primary-blue) !important;
+  font-weight: 600 !important;
+}
+
+.tooltip-unrestricted {
+  color: var(--status-success) !important;
+  font-weight: 600 !important;
+}
+
+.tooltip-blocked {
+  color: var(--status-error) !important;
+  font-weight: 600 !important;
+}
+
+.tooltip-warning {
+  color: var(--status-warning) !important;
+  font-weight: 600 !important;
+}
+
+/* Recharts specific overrides */
+.recharts-default-tooltip {
+  background: var(--chart-tooltip-bg, var(--bg-card)) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+/* Chart text colors */
+.recharts-text {
+  fill: var(--chart-text, var(--text-secondary)) !important;
+}
+
+.recharts-cartesian-axis-tick-value {
+  fill: var(--chart-axis-color, var(--text-tertiary)) !important;
+}
+
+.recharts-cartesian-axis-line {
+  stroke: var(--border-medium) !important;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--chart-grid, var(--border-light)) !important;
+  stroke-opacity: 0.5 !important;
+}
+
+/* Legend text */
+.recharts-legend-item-text {
+  color: var(--text-secondary) !important;
+}
+
+/* Pie chart label text */
+.recharts-pie-label-text {
+  fill: var(--text-primary) !important;
+  font-weight: 500 !important;
+}
+
+/* Dark mode specific chart adjustments */
+:root.dark-theme .recharts-surface {
+  background: transparent !important;
+}
+
+/* Override any hardcoded colors in dark mode */
+:root.dark-theme .custom-tooltip .tooltip-value span {
+  filter: brightness(1.2) !important;
+}
+
+/* Ensure chart containers have proper background */
+.chart-container .recharts-wrapper {
+  background: transparent !important;
+}
+
+/* Fix for any white backgrounds in dark mode */
+:root.dark-theme .recharts-wrapper,
+:root.dark-theme .recharts-surface {
+  background: transparent !important;
+}
