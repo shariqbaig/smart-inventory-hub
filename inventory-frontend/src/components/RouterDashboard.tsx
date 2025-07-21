@@ -5,7 +5,7 @@ import KpiCard from './KpiCard';
 import FileManagement from './FileManagement';
 import { useTheme } from '../contexts/ThemeContext';
 import type { InventoryMetrics, LocationStats, PlantStats } from '../types';
-import { inventoryApi } from '../services/api';
+import { inventoryApi } from '../services/clientApi';
 import { formatCurrency } from '../utils/currency';
 import './EnhancedDashboard.css';
 import './ChartThemes.css';
@@ -128,12 +128,12 @@ const RouterDashboard: React.FC = () => {
     // Reload dashboard data when a new file is uploaded/activated
     console.log('File upload success, reloading data...', fileInfo);
     setIsReloadingData(true);
-    // Small delay to ensure backend has processed the file
+    // Data should already be refreshed by FileManagement, so minimal delay
     setTimeout(() => {
       loadData().finally(() => {
         setIsReloadingData(false);
       });
-    }, 500);
+    }, 100);
   };
 
   const handleLocationClick = (data: any) => {
