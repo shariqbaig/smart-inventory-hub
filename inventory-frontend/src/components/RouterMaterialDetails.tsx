@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { MaterialDetail } from '../types';
-import { inventoryApi } from '../services/api';
+import { inventoryApi } from '../services/clientApi';
 import './MaterialDetails.css';
 import './EnhancedDashboard.css';
 
@@ -303,7 +303,7 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
     return (
       <div className="material-details-error">
         <p>Error: {error}</p>
-        <button onClick={loadMaterials} className="retry-button">
+        <button onClick={() => loadMaterials()} className="retry-button">
           Retry
         </button>
       </div>

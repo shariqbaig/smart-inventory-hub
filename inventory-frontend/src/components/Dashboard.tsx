@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import KpiCard from './KpiCard';
 import type { InventoryMetrics, LocationStats, PlantStats } from '../types';
-import { inventoryApi } from '../services/api';
+import { inventoryApi } from '../services/clientApi';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
@@ -128,7 +128,7 @@ const Dashboard: React.FC = () => {
               <Bar 
                 dataKey="totalQuantity" 
                 fill="#8884d8"
-                onClick={(data) => handleLocationClick(data.storageLocation)}
+                onClick={(data: any) => handleLocationClick(data.payload?.storageLocation)}
                 style={{ cursor: 'pointer' }}
               />
             </BarChart>
@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="totalQuantity"
-                label={({ plant, percent }) => `${plant} (${(percent * 100).toFixed(1)}%)`}
+                label={({ plant, percent }) => `${plant} (${((percent || 0) * 100).toFixed(1)}%)`}
                 onClick={(data) => handlePlantClick(data.plant)}
                 style={{ cursor: 'pointer' }}
               >

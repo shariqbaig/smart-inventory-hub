@@ -7,7 +7,7 @@ import LocationsListView from './LocationsListView';
 import MaterialsSummaryView from './MaterialsSummaryView';
 import DataRequirementsView from './DataRequirementsView';
 import type { InventoryMetrics, LocationStats, PlantStats } from '../types';
-import { inventoryApi } from '../services/api';
+import { inventoryApi } from '../services/clientApi';
 import './EnhancedDashboard.css';
 
 type ViewMode = 'dashboard' | 'location-drill' | 'plant-drill' | 'blocked-materials' | 'unrestricted-materials' | 'total-inventory' | 'total-plants' | 'total-locations' | 'materials-summary' | 'data-requirements';
@@ -144,7 +144,7 @@ const CompleteDashboard: React.FC = () => {
     });
   };
 
-  const handleLocationBarClick = (data: any, index: number) => {
+  const handleLocationBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload[0]) {
       handleLocationClick(data.activePayload[0].payload);
     }
@@ -350,7 +350,7 @@ const CompleteDashboard: React.FC = () => {
                 outerRadius={100}
                 fill="#0F4C8C"
                 dataKey="totalQuantity"
-                label={({ plant, percent }) => `${plant} (${(percent * 100).toFixed(1)}%)`}
+                label={({ plant, percent }) => `${plant} (${((percent || 0) * 100).toFixed(1)}%)`}
                 onClick={handlePlantPieClick}
                 style={{ cursor: 'pointer' }}
               >

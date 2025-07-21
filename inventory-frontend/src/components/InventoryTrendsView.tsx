@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Area, AreaChart } from 'recharts';
-import { inventoryApi } from '../services/api';
+import { inventoryApi } from '../services/clientApi';
 import type { InventoryMetrics, LocationStats, PlantStats } from '../types';
 import { formatCurrency } from '../utils/currency';
 import './EnhancedDashboard.css';

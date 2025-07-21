@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { inventoryApi } from '../services/api';
+import { inventoryApi } from '../services/clientApi';
 import type { MaterialDetail } from '../types';
 import './EnhancedDashboard.css';
 

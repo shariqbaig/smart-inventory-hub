@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { inventoryApi } from '../services/api';
+import { inventoryApi } from '../services/clientApi';
 import type { MaterialDetail } from '../types';
 import './EnhancedDashboard.css';
 

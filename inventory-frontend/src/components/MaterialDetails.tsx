@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { MaterialDetail } from '../types';
-import { inventoryApi } from '../services/api';
+import { inventoryApi } from '../services/clientApi';
 import './MaterialDetails.css';
 
 interface MaterialDetailsProps {
@@ -246,7 +246,7 @@ const MaterialDetails: React.FC<MaterialDetailsProps> = ({
     return (
       <div className="material-details-error">
         <p>Error: {error}</p>
-        <button onClick={loadMaterials} className="retry-button">
+        <button onClick={() => loadMaterials()} className="retry-button">
           Retry
         </button>
       </div>

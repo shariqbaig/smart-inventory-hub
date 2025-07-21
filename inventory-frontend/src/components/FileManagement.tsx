@@ -357,40 +357,272 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
 
           {activeTab === 'requirements' && (
             <div className="requirements-section">
-              <h3>File Requirements</h3>
+              <div className="requirements-intro">
+                <h3>📋 Excel File Requirements</h3>
+                <p>Ensure your Excel file meets these specifications for successful upload and validation. Use our template as a starting point to avoid common formatting issues.</p>
+                
+                <div className="template-section">
+                  <h4>📥 Need a template?</h4>
+                  <p>Download our Excel template with the required columns and sample data.</p>
+                  <button className="template-button" onClick={downloadTemplate}>
+                    📄 Download Template
+                  </button>
+                </div>
+              </div>
               
               <div className="requirements-content">
-                <h4>Required Columns</h4>
-                <ul className="required-columns">
-                  <li><strong>Material</strong> - Material code/number (required)</li>
-                  <li><strong>Material Description</strong> - Description of the material</li>
-                  <li><strong>Plant</strong> - Plant code (required)</li>
-                  <li><strong>Storage Location</strong> - Storage location code</li>
-                  <li><strong>Base Unit of Measure</strong> - Unit of measurement</li>
-                  <li><strong>Unrestricted</strong> - Unrestricted stock quantity</li>
-                  <li><strong>Blocked</strong> - Blocked stock quantity (required)</li>
-                </ul>
+                <div className="columns-section">
+                  <h4 className="section-title">
+                    <span className="title-icon">🔴</span>
+                    Required Columns
+                    <span className="requirement-badge required">Must Include</span>
+                  </h4>
+                  <div className="columns-grid">
+                    <div className="column-item required">
+                      <div className="column-header">
+                        <h5>📦 Material</h5>
+                        <span className="column-type">Text/Number</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Unique material code or number</p>
+                      <p><strong>Format:</strong> Letters, numbers, hyphens, underscores only</p>
+                      <p><strong>Example:</strong> MAT-001, 12345, PART_A1</p>
+                    </div>
+                    
+                    <div className="column-item required">
+                      <div className="column-header">
+                        <h5>📝 Material Description</h5>
+                        <span className="column-type">Text</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Descriptive name of the material</p>
+                      <p><strong>Format:</strong> Any text</p>
+                      <p><strong>Example:</strong> Steel Bolts M8x20mm</p>
+                    </div>
+                    
+                    <div className="column-item required">
+                      <div className="column-header">
+                        <h5>🏭 Plant</h5>
+                        <span className="column-type">Text</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Manufacturing plant code</p>
+                      <p><strong>Format:</strong> Plant identifier</p>
+                      <p><strong>Example:</strong> Y012, PLANT_A, FAC001</p>
+                    </div>
+                    
+                    <div className="column-item required">
+                      <div className="column-header">
+                        <h5>📍 Storage Location</h5>
+                        <span className="column-type">Text</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Storage location code</p>
+                      <p><strong>Format:</strong> Location identifier</p>
+                      <p><strong>Example:</strong> YP01, WARE_A, BIN_123</p>
+                    </div>
+                    
+                    <div className="column-item required">
+                      <div className="column-header">
+                        <h5>📏 Base Unit of Measure</h5>
+                        <span className="column-type">Text</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Unit of measurement</p>
+                      <p><strong>Format:</strong> Standard units</p>
+                      <p><strong>Example:</strong> EA, KG, L, M</p>
+                    </div>
+                    
+                    <div className="column-item required">
+                      <div className="column-header">
+                        <h5>✅ Unrestricted</h5>
+                        <span className="column-type">Number</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Available stock quantity</p>
+                      <p><strong>Format:</strong> Non-negative numbers</p>
+                      <p><strong>Example:</strong> 100, 0, 2500.5</p>
+                    </div>
+                    
+                    <div className="column-item required">
+                      <div className="column-header">
+                        <h5>🚫 Blocked</h5>
+                        <span className="column-type">Number</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Blocked stock quantity</p>
+                      <p><strong>Format:</strong> Non-negative numbers</p>
+                      <p><strong>Example:</strong> 50, 0, 125.75</p>
+                    </div>
+                  </div>
+                </div>
 
-                <h4>Optional Columns</h4>
-                <ul className="optional-columns">
-                  <li><strong>Stock in transfer</strong> - Stock currently in transfer</li>
-                  <li><strong>In Quality Insp.</strong> - Stock under quality inspection</li>
-                  <li><strong>Restricted-Use Stock</strong> - Restricted stock quantity</li>
-                  <li><strong>Value Unrestricted</strong> - Monetary value of unrestricted stock</li>
-                  <li><strong>Total shelf life</strong> - Shelf life in days</li>
-                  <li><strong>SLED/BBD</strong> - Shelf life expiration date</li>
-                  <li><strong>Date of Manufacture</strong> - Manufacturing date</li>
-                  <li><strong>Batch</strong> - Batch number</li>
-                </ul>
+                <div className="columns-section">
+                  <h4 className="section-title">
+                    <span className="title-icon">🟢</span>
+                    Optional Columns
+                    <span className="requirement-badge optional">Nice to Have</span>
+                  </h4>
+                  <div className="columns-grid">
+                    <div className="column-item optional">
+                      <div className="column-header">
+                        <h5>🔄 Stock in Transfer</h5>
+                        <span className="column-type">Number</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Stock currently being transferred</p>
+                      <p><strong>Default:</strong> 0 if not provided</p>
+                    </div>
+                    
+                    <div className="column-item optional">
+                      <div className="column-header">
+                        <h5>🔍 In Quality Inspection</h5>
+                        <span className="column-type">Number</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Stock under quality inspection</p>
+                      <p><strong>Default:</strong> 0 if not provided</p>
+                    </div>
+                    
+                    <div className="column-item optional">
+                      <div className="column-header">
+                        <h5>⚠️ Restricted-Use Stock</h5>
+                        <span className="column-type">Number</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Stock with restricted usage</p>
+                      <p><strong>Default:</strong> 0 if not provided</p>
+                    </div>
+                    
+                    <div className="column-item optional">
+                      <div className="column-header">
+                        <h5>💰 Value Unrestricted</h5>
+                        <span className="column-type">Number</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Monetary value of unrestricted stock</p>
+                      <p><strong>Format:</strong> Currency amount in PKR</p>
+                    </div>
+                    
+                    <div className="column-item optional">
+                      <div className="column-header">
+                        <h5>⏰ Total Shelf Life</h5>
+                        <span className="column-type">Number</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Shelf life in days</p>
+                      <p><strong>Format:</strong> Number of days</p>
+                    </div>
+                    
+                    <div className="column-item optional">
+                      <div className="column-header">
+                        <h5>📅 SLED/BBD</h5>
+                        <span className="column-type">Date</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Shelf life expiration date</p>
+                      <p><strong>Format:</strong> Excel date format</p>
+                    </div>
+                    
+                    <div className="column-item optional">
+                      <div className="column-header">
+                        <h5>🏭 Date of Manufacture</h5>
+                        <span className="column-type">Date</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Manufacturing date</p>
+                      <p><strong>Format:</strong> Excel date format</p>
+                    </div>
+                    
+                    <div className="column-item optional">
+                      <div className="column-header">
+                        <h5>🏷️ Batch</h5>
+                        <span className="column-type">Text</span>
+                      </div>
+                      <p><strong>Purpose:</strong> Batch or lot number</p>
+                      <p><strong>Format:</strong> Any text or number</p>
+                    </div>
+                  </div>
+                </div>
 
-                <h4>Validation Rules</h4>
-                <ul className="validation-rules">
-                  <li>Material code cannot be empty and should contain only letters, numbers, hyphens, and underscores</li>
-                  <li>Plant code cannot be empty</li>
-                  <li>Storage location can be empty only if there's stock in transfer</li>
-                  <li>Quantity fields must be numeric and non-negative</li>
-                  <li>Empty rows will be ignored</li>
-                </ul>
+                <div className="validation-section">
+                  <h4 className="section-title">
+                    <span className="title-icon">✅</span>
+                    Validation Rules
+                    <span className="requirement-badge validation">Auto-Check</span>
+                  </h4>
+                  <div className="validation-rules-grid">
+                    <div className="rule-card">
+                      <div className="rule-icon">📦</div>
+                      <div className="rule-content">
+                        <h6>Material Code Validation</h6>
+                        <p>Must not be empty and should contain only letters, numbers, hyphens, and underscores</p>
+                      </div>
+                    </div>
+                    
+                    <div className="rule-card">
+                      <div className="rule-icon">🏭</div>
+                      <div className="rule-content">
+                        <h6>Plant Code Required</h6>
+                        <p>Plant code field cannot be empty for any inventory item</p>
+                      </div>
+                    </div>
+                    
+                    <div className="rule-card">
+                      <div className="rule-icon">📍</div>
+                      <div className="rule-content">
+                        <h6>Storage Location Logic</h6>
+                        <p>Can be empty only if there's stock in transfer (will show as 'SIT')</p>
+                      </div>
+                    </div>
+                    
+                    <div className="rule-card">
+                      <div className="rule-icon">🔢</div>
+                      <div className="rule-content">
+                        <h6>Quantity Fields</h6>
+                        <p>All quantity fields must be numeric and non-negative numbers</p>
+                      </div>
+                    </div>
+                    
+                    <div className="rule-card">
+                      <div className="rule-icon">🗑️</div>
+                      <div className="rule-content">
+                        <h6>Empty Row Handling</h6>
+                        <p>Completely empty rows will be automatically ignored during processing</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="tips-section">
+                  <h4 className="section-title">
+                    <span className="title-icon">💡</span>
+                    Best Practices
+                  </h4>
+                  <div className="tips-grid">
+                    <div className="tip-card">
+                      <div className="tip-header">
+                        <span className="tip-icon">📂</span>
+                        <h6>File Format</h6>
+                      </div>
+                      <ul>
+                        <li>Use .xlsx or .xls format only</li>
+                        <li>Keep file size under 10MB</li>
+                        <li>Use first row for column headers</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="tip-card">
+                      <div className="tip-header">
+                        <span className="tip-icon">🎯</span>
+                        <h6>Data Quality</h6>
+                      </div>
+                      <ul>
+                        <li>Remove completely empty rows</li>
+                        <li>Ensure consistent data formats</li>
+                        <li>Use standard unit abbreviations</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="tip-card">
+                      <div className="tip-header">
+                        <span className="tip-icon">🚀</span>
+                        <h6>Performance</h6>
+                      </div>
+                      <ul>
+                        <li>Avoid merged cells in data area</li>
+                        <li>Keep formulas in separate columns</li>
+                        <li>Remove unnecessary formatting</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

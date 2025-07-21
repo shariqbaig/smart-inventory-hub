@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { inventoryApi } from '../services/api';
+import { inventoryApi } from '../services/clientApi';
 import type { MaterialDetail } from '../types';
 import { formatCurrency } from '../utils/currency';
 import './EnhancedDashboard.css';
@@ -259,7 +259,7 @@ const ShelfLifeAnalysisView: React.FC = () => {
                   cy="50%"
                   outerRadius={100}
                   dataKey="value"
-                  label={({ category, value }) => `${category}: ${formatCurrency(value)}`}
+                  label={({ category, value }) => `${category}: ${formatCurrency(value || 0)}`}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index]} />
