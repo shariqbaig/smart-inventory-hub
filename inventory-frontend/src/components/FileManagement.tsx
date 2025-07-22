@@ -240,7 +240,7 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
       
       // Notify parent component about successful activation
       console.log('Notifying parent component...');
-      const uploadSuccessPromise = onUploadSuccess({
+      onUploadSuccess({
         fileId,
         message: `File "${activatedFile?.name || 'Unknown'}" activated successfully`,
         recordCount: activatedFile?.recordCount || 0,
@@ -258,15 +258,9 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
         }
       });
       
-      // Wait for dashboard data refresh to complete before closing modal
+      // Add a delay to allow dashboard refresh to complete
       console.log('Waiting for dashboard refresh to complete...');
-      if (uploadSuccessPromise && typeof uploadSuccessPromise.then === 'function') {
-        await uploadSuccessPromise;
-        console.log('Dashboard refresh completed, now closing modal');
-      }
-      
-      // Add a small delay to ensure UI state is updated before closing
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Close the modal
       console.log('Closing modal after successful activation');
