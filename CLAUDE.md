@@ -5,73 +5,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project: Inventory Dashboard Application
 
 ### Overview
-Complete full-stack inventory dashboard application built with NestJS backend and React frontend, featuring dynamic Excel file processing for enterprise inventory management and analytics. Features corporate branding, Pakistani Rupee (PKR) currency formatting, and production-ready architecture with advanced file validation and elegant data storytelling.
+Complete **frontend-only** inventory dashboard application built with React, featuring dynamic Excel file processing for enterprise inventory management and analytics. All processing happens client-side with browser-based storage - no backend server required. Features corporate branding, Pakistani Rupee (PKR) currency formatting, and production-ready architecture with advanced file validation and elegant data storytelling.
 
 ### Project Status
-✅ **PRODUCTION READY** - All features implemented and functional with latest enhancements
+✅ **PRODUCTION READY** - Frontend-only architecture with all features implemented and functional
 
 ### Architecture
-- **Backend**: NestJS (TypeScript) with Swagger API documentation
-- **Frontend**: React (TypeScript) with Vite build system 
+- **Frontend-Only**: React (TypeScript) with Vite build system
+- **Storage**: Browser IndexedDB for persistent data storage
 - **Charts**: Recharts for interactive data visualization
-- **Data Processing**: Excel file processing with 2,887 inventory items
+- **Data Processing**: Client-side Excel file processing with xlsx library
 - **Styling**: Corporate branding and responsive design
+- **Deployment**: Static hosting (Vercel, Netlify, GitHub Pages)
 
 ### Key Commands
 
 #### Development Setup
 ```bash
-# Backend development (Terminal 1)
-cd inventory-backend
-npm install
-npm run start:dev          # Runs on http://localhost:3001
-                          # Swagger docs at http://localhost:3001/api/docs
-
-# Frontend development (Terminal 2)
+# Frontend-only development
 cd inventory-frontend
 npm install
 npm run dev               # Runs on http://localhost:5173
-
-# Excel data analysis (optional)
-npm install xlsx
-node analyze-excel.js
 ```
 
-#### Backend Commands (inventory-backend/)
+#### Development Commands (inventory-frontend/)
 ```bash
-npm run build             # Build for production
-npm run start:prod        # Production mode
-npm run lint              # ESLint checking with auto-fix
-npm run test              # Unit tests
-npm run test:e2e          # End-to-end tests
-npm run test:cov          # Coverage report
-npm run test:watch        # Watch mode
-npm run format            # Prettier formatting
-```
-
-#### Frontend Commands (inventory-frontend/)
-```bash
-npm run build             # TypeScript compile + Vite build
+npm run dev               # Development server  
+npm run build             # Production build
 npm run preview           # Preview production build
 npm run lint              # ESLint checking
 ```
 
-#### Testing Backend Logic Directly
+#### Deployment
 ```bash
-node test-service.js      # Direct service testing
-node test-backend.js      # Backend validation
+npm run build             # Creates dist/ folder for deployment
+# Deploy dist/ folder to any static hosting service
 ```
 
-### API Endpoints
-Backend serves REST API with Swagger documentation at `http://localhost:3001/api/docs`:
+#### Debug Tools
+```javascript
+// Browser console commands:
+debugStorage()            # Inspect IndexedDB storage contents
+```
 
-- **GET /inventory/metrics** - KPI statistics (Total, Blocked, Unrestricted, Restricted)
-- **GET /inventory/locations** - Storage location analytics 
-- **GET /inventory/plants** - Plant distribution analytics
-- **GET /inventory/materials** - Paginated material listings with search/filter
-- **GET /inventory/blocked-materials** - Materials with blocked stock
-- **GET /inventory/drill-down/location/:location** - Location drill-down details
-- **GET /inventory/drill-down/plant/:plant** - Plant drill-down details
+### Client-Side Data Operations
+All operations happen locally in browser through client services:
+
+- **Metrics Calculation** - KPI statistics (Total, Blocked, Unrestricted, Restricted)
+- **Location Analytics** - Storage location analytics and drill-downs
+- **Plant Analytics** - Plant distribution analytics and drill-downs  
+- **Material Management** - Paginated material listings with search/filter
+- **File Management** - Upload, validate, activate, and delete Excel files
+- **Template Generation** - Download Excel template with sample data
 
 ### Dashboard Features
 - **Interactive KPI Cards**: Clickable metrics for drill-down navigation

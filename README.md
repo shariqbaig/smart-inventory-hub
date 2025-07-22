@@ -1,11 +1,12 @@
 # Smart Inventory Hub
 
-A complete full-stack inventory management dashboard application built with modern web technologies. Features dynamic Excel file processing, advanced analytics, interactive visualizations, and comprehensive file management for enterprise inventory operations.
+A modern **frontend-only** inventory management dashboard application that runs entirely in the browser. Features dynamic Excel file processing, advanced analytics, interactive visualizations, and comprehensive file management - all without requiring a backend server.
 
 ![Project Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
-![Backend](https://img.shields.io/badge/Backend-NestJS-red)
+![Architecture](https://img.shields.io/badge/Architecture-Frontend%20Only-blue)
 ![Frontend](https://img.shields.io/badge/Frontend-React-blue)
 ![TypeScript](https://img.shields.io/badge/Language-TypeScript-blue)
+![Storage](https://img.shields.io/badge/Storage-IndexedDB-orange)
 
 ## 🚀 Features
 
@@ -16,43 +17,46 @@ A complete full-stack inventory management dashboard application built with mode
 - **💱 Currency Support**: Pakistani Rupee (PKR) formatting
 - **📱 Responsive Design**: Desktop, tablet, and mobile optimized
 - **🔒 Type Safety**: Full TypeScript implementation
-- **📚 API Documentation**: Swagger/OpenAPI integration
-- **🧪 Testing**: Comprehensive unit and E2E tests
+- **💾 Local Storage**: Browser-based IndexedDB for persistent data storage
+- **🌐 Offline Capable**: Works completely offline once loaded
+- **⚡ Zero Backend**: No server setup or maintenance required
 
 ## 🏗️ Architecture
 
+**Frontend-Only Architecture** - No backend server required!
+
 ```
 smart-inventory-hub/
-├── inventory-backend/     # NestJS backend API
-├── inventory-frontend/    # React frontend dashboard  
-├── examples/             # Sample data and usage examples
-└── assets/               # Shared documentation and templates
+├── inventory-frontend/    # React frontend dashboard (main application)
+└── examples/             # Sample Excel files and usage examples
+```
+
+**Data Flow:**
+```
+Excel Upload → Client-Side Processing → IndexedDB Storage → Dashboard Analytics
 ```
 
 ## 🛠️ Tech Stack
 
-### Backend
-- **Framework**: NestJS (Node.js/TypeScript)
-- **Documentation**: Swagger/OpenAPI
-- **File Processing**: xlsx library
-- **Validation**: class-validator, class-transformer
-- **Testing**: Jest
-
-### Frontend  
+**Frontend-Only Stack:**
 - **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
-- **Charts**: Recharts
-- **HTTP Client**: Axios
-- **Routing**: React Router
+- **Charts**: Recharts for interactive data visualization
+- **File Processing**: xlsx library for client-side Excel processing
+- **Storage**: IndexedDB for persistent browser storage
+- **Routing**: React Router for navigation
+- **Icons**: React Icons for UI components
 - **Styling**: CSS Modules with responsive design
+- **Deployment**: Static hosting (Vercel, Netlify, GitHub Pages)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn
+- Modern browser with IndexedDB support
 
-### Installation
+### Installation & Development
 
 1. **Clone the repository**
    ```bash
@@ -60,86 +64,62 @@ smart-inventory-hub/
    cd smart-inventory-hub
    ```
 
-2. **Setup Backend**
-   ```bash
-   cd inventory-backend
-   npm install
-   npm run start:dev
-   ```
-   Backend runs on http://localhost:3001
-   
-   API Documentation: http://localhost:3001/api/docs
-
-3. **Setup Frontend** (in new terminal)
+2. **Setup and Run**
    ```bash
    cd inventory-frontend
    npm install
    npm run dev
    ```
-   Frontend runs on http://localhost:5173
+   Application runs on http://localhost:5173
+
+3. **Production Build**
+   ```bash
+   npm run build
+   npm run preview  # Test production build
+   ```
 
 ### 📂 Sample Data
 
-Upload the sample Excel file from `inventory-backend/assets/inventory_template.xlsx` to get started with demo data.
+Use the sample Excel files from the `examples/` folder or download the template directly from the app.
 
-## 🔧 Development
+## 🔧 Development Commands
 
-### Backend Commands
-```bash
-cd inventory-backend
-npm run start:dev        # Development mode
-npm run build           # Build for production
-npm run start:prod      # Production mode
-npm run lint            # ESLint with auto-fix
-npm run test            # Unit tests
-npm run test:e2e        # End-to-end tests
-npm run test:cov        # Coverage report
-```
-
-### Frontend Commands  
 ```bash
 cd inventory-frontend
+
 npm run dev             # Development server
 npm run build           # Production build
 npm run preview         # Preview production build
 npm run lint            # ESLint checking
 ```
 
-## 📊 API Endpoints
+## 🚀 Deployment
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/inventory/metrics` | KPI statistics |
-| GET | `/inventory/locations` | Location analytics |
-| GET | `/inventory/plants` | Plant distribution |
-| GET | `/inventory/materials` | Paginated materials |
-| GET | `/inventory/blocked-materials` | Blocked stock items |
-| POST | `/files/upload` | Upload Excel files |
-| GET | `/files/template` | Download template |
-| GET | `/files/history` | File upload history |
+### Static Hosting
+Since this is a frontend-only application, you can deploy it to any static hosting service:
 
-Complete API documentation available at `/api/docs` when backend is running.
+```bash
+npm run build           # Creates `dist/` folder
+```
+
+**Deployment Options:**
+- **Vercel**: `npm i -g vercel && vercel --prod`
+- **Netlify**: Drag & drop `dist/` folder to Netlify dashboard
+- **GitHub Pages**: Upload `dist/` contents to gh-pages branch
+- **Any CDN**: Serve the `dist/` folder content
+
+## 💾 Data Storage
+
+**Browser-based Storage:**
+- All data stored locally in browser's IndexedDB
+- No server or database required
+- Data persists across browser sessions
+- Typical storage limit: ~250MB per domain
+- Privacy-focused: data never leaves your browser
 
 ## 📁 Project Structure
 
-### Backend (`inventory-backend/`)
-```
-src/
-├── inventory/           # Core inventory module
-│   ├── inventory.controller.ts
-│   ├── inventory.service.ts  
-│   ├── inventory.interface.ts
-│   └── dto/
-├── files/              # File management module
-│   ├── files.controller.ts
-│   └── files.service.ts
-├── app.module.ts       # Application setup
-└── main.ts            # Bootstrap
-assets/                # Static templates
-└── inventory_template.xlsx
-```
-
-### Frontend (`inventory-frontend/`)
+### Main Application (`inventory-frontend/`)
 ```
 src/
 ├── components/         # React components
@@ -147,7 +127,11 @@ src/
 │   ├── MaterialDetails.tsx
 │   ├── FileManagement.tsx
 │   └── ...
-├── services/          # API client
+├── services/          # Client-side services  
+│   ├── clientApi.ts        # Drop-in API replacement
+│   ├── dataStorage.ts      # IndexedDB wrapper
+│   ├── excelProcessor.ts   # Excel file processing
+│   └── inventoryService.ts # Business logic
 ├── types/            # TypeScript definitions
 └── contexts/         # React contexts
 ```
