@@ -31,7 +31,6 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
   const [uploadedFiles, setUploadedFiles] = useState<FileMetadata[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
-  const [showValidation, setShowValidation] = useState(false);
   const [activatingFileId, setActivatingFileId] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -111,6 +110,7 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
     }
 
     setError(null);
+    setValidationResult(null); // Clear any previous validation results
     setIsUploading(true);
     setUploadProgress(0);
 
@@ -131,12 +131,13 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
         const hasErrors = result.validation.errors.length > 0;
         
         if (hasErrors) {
-          // File has errors - don't auto-activate, show validation results
-          setShowValidation(true);
-          setActiveTab('history'); // Switch to history tab to see the uploaded file
+          // File has errors - don't auto-activate, stay on upload tab to show validation results
+          // Keep validation results visible to show user what needs to be fixed
           await loadFileHistory(); // Refresh history to show new file at top
         } else {
           // File is valid (no errors, may have warnings) - auto-activate and go to dashboard
+          // Clear validation results since file is being activated successfully
+          setValidationResult(null);
           await loadFileHistory();
           onUploadSuccess({
             fileId: result.fileId,
@@ -145,7 +146,7 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
             validation: result.validation
           });
           
-          // Show validation results if there are warnings, but still close popup
+          // Log warnings but don't show validation UI since file is activated
           if (result.validation.warnings.length > 0) {
             console.log(`File activated with ${result.validation.warnings.length} warnings`);
           }
@@ -156,7 +157,6 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
       } else {
         setError(result.message);
         setValidationResult(result.validation);
-        setShowValidation(true);
       }
 
       // Refresh file history to show the new file
@@ -414,6 +414,148 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                 style={{ display: 'none' }}
                 aria-label="Click to browse for files"
               />
+
+              {/* Validation Results - Integrated into Upload Tab */}
+              {validationResult && (
+                <div className={`validation-summary-card ${validationResult.isValid ? 'success' : 'error'}`}>
+                  <div className="validation-header-inline">
+                    <div className="validation-status-inline">
+                      {validationResult.isValid ? (
+                        <>
+                          <BiCheck className="status-icon success" size={24} />
+                          <span className="status-text success">File validation passed!</span>
+                        </>
+                      ) : (
+                        <>
+                          <BiError className="status-icon error" size={24} />
+                          <span className="status-text error">File has validation issues</span>
+                        </>
+                      )}
+                    </div>
+                    <button 
+                      className="dismiss-validation"
+                      onClick={() => setValidationResult(null)}
+                      title="Dismiss validation results"
+                    >
+                      <span>×</span>
+                    </button>
+                  </div>
+                  
+                  <div className="validation-stats-inline">
+                    <div className="stat-item">
+                      <BiData className="stat-icon" size={16} />
+                      <span>{validationResult.summary.totalRows} total rows</span>
+                    </div>
+                    <div className="stat-item success">
+                      <BiCheckShield className="stat-icon" size={16} />
+                      <span>{validationResult.summary.validRows} valid</span>
+                    </div>
+                    {validationResult.summary.errorRows > 0 && (
+                      <div className="stat-item error">
+                        <BiError className="stat-icon" size={16} />
+                        <span>{validationResult.summary.errorRows} errors</span>
+                      </div>
+                    )}
+                    {validationResult.summary.warningRows > 0 && (
+                      <div className="stat-item warning">
+                        <HiOutlineExclamation className="stat-icon" size={16} />
+                        <span>{validationResult.summary.warningRows} warnings</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {(validationResult.errors.length > 0 || validationResult.warnings.length > 0) && (
+                    <div className="validation-issues">
+                      {validationResult.errors.length > 0 && (
+                        <div className="issues-section error">
+                          <div className="issues-header">
+                            <BiError className="section-icon" size={18} />
+                            <h4>Critical Issues ({validationResult.errors.length})</h4>
+                            <span className="severity-badge error">Must Fix</span>
+                          </div>
+                          <p className="issues-description">
+                            These errors prevent your file from being activated. Please fix them and upload again.
+                          </p>
+                          <div className="issues-list">
+                            {validationResult.errors.slice(0, 3).map((error, index) => (
+                              <div key={index} className="issue-item error">
+                                <div className="issue-location">
+                                  <span className="row-indicator">Row {error.row}</span>
+                                  <span className="column-indicator">{error.column}</span>
+                                </div>
+                                <div className="issue-content">
+                                  <p className="issue-message">{error.message}</p>
+                                  {error.value && (
+                                    <p className="issue-value">Current value: <code>{error.value}</code></p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            {validationResult.errors.length > 3 && (
+                              <div className="more-issues">
+                                <HiOutlineInformationCircle size={16} />
+                                <span>... and {validationResult.errors.length - 3} more errors. Please download our template for guidance.</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {validationResult.warnings.length > 0 && (
+                        <div className="issues-section warning">
+                          <div className="issues-header">
+                            <HiOutlineExclamation className="section-icon" size={18} />
+                            <h4>Warnings ({validationResult.warnings.length})</h4>
+                            <span className="severity-badge warning">Review Recommended</span>
+                          </div>
+                          <p className="issues-description">
+                            These warnings won't prevent activation, but you should review them for data quality.
+                          </p>
+                          <div className="issues-list">
+                            {validationResult.warnings.slice(0, 2).map((warning, index) => (
+                              <div key={index} className="issue-item warning">
+                                <div className="issue-location">
+                                  <span className="row-indicator">Row {warning.row}</span>
+                                  <span className="column-indicator">{warning.column}</span>
+                                </div>
+                                <div className="issue-content">
+                                  <p className="issue-message">{warning.message}</p>
+                                  {warning.value && (
+                                    <p className="issue-value">Current value: <code>{warning.value}</code></p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            {validationResult.warnings.length > 2 && (
+                              <div className="more-issues">
+                                <HiOutlineInformationCircle size={16} />
+                                <span>... and {validationResult.warnings.length - 2} more warnings</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="validation-actions">
+                        <button 
+                          className="template-button primary"
+                          onClick={downloadTemplate}
+                        >
+                          <FiDownload size={16} />
+                          Download Template
+                        </button>
+                        <button 
+                          className="template-button secondary"
+                          onClick={() => setActiveTab('requirements')}
+                        >
+                          <HiOutlineLightBulb size={16} />
+                          View Requirements
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="template-section compact">
                 <div className="template-actions">
@@ -955,78 +1097,6 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
           </div>
         )}
 
-        {showValidation && validationResult && (
-          <div className="validation-results">
-            <div className="validation-header">
-              <h4>Validation Results</h4>
-              <button 
-                className="close-validation"
-                onClick={() => setShowValidation(false)}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="validation-summary">
-              <div className={`validation-status ${validationResult.isValid ? 'valid' : 'invalid'}`}>
-                {validationResult.isValid ? '✅ File is valid' : '❌ File has validation issues'}
-              </div>
-              
-              <div className="validation-stats">
-                <span>Total Rows: {validationResult.summary.totalRows}</span>
-                <span>Valid Rows: {validationResult.summary.validRows}</span>
-                {validationResult.summary.errorRows > 0 && (
-                  <span className="error-stat">Error Rows: {validationResult.summary.errorRows}</span>
-                )}
-                {validationResult.summary.warningRows > 0 && (
-                  <span className="warning-stat">Warning Rows: {validationResult.summary.warningRows}</span>
-                )}
-              </div>
-            </div>
-
-            {(validationResult.errors.length > 0 || validationResult.warnings.length > 0) && (
-              <div className="validation-details">
-                {validationResult.errors.length > 0 && (
-                  <div className="validation-errors">
-                    <h5>Errors ({validationResult.errors.length})</h5>
-                    <div className="validation-list">
-                      {validationResult.errors.slice(0, 10).map((error, index) => (
-                        <div key={index} className="validation-item error">
-                          <strong>Row {error.row}, {error.column}:</strong> {error.message}
-                          {error.value && <span className="error-value">Value: {error.value}</span>}
-                        </div>
-                      ))}
-                      {validationResult.errors.length > 10 && (
-                        <div className="more-items">
-                          ... and {validationResult.errors.length - 10} more errors
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {validationResult.warnings.length > 0 && (
-                  <div className="validation-warnings">
-                    <h5>Warnings ({validationResult.warnings.length})</h5>
-                    <div className="validation-list">
-                      {validationResult.warnings.slice(0, 5).map((warning, index) => (
-                        <div key={index} className="validation-item warning">
-                          <strong>Row {warning.row}, {warning.column}:</strong> {warning.message}
-                          {warning.value && <span className="warning-value">Value: {warning.value}</span>}
-                        </div>
-                      ))}
-                      {validationResult.warnings.length > 5 && (
-                        <div className="more-items">
-                          ... and {validationResult.warnings.length - 5} more warnings
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

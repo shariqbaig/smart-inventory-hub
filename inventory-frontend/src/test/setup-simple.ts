@@ -13,5 +13,8 @@ global.console = {
 global.URL.createObjectURL = vi.fn(() => 'mocked-object-url')
 global.URL.revokeObjectURL = vi.fn()
 
+// Mock window.confirm
+global.confirm = vi.fn(() => true)
+
 // Mock File.prototype.arrayBuffer
 File.prototype.arrayBuffer = vi.fn().mockResolvedValue(new ArrayBuffer(8))

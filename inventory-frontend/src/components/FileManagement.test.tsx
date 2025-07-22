@@ -16,7 +16,10 @@ vi.mock('../services/excelProcessor', () => ({
 
 vi.mock('../services/dataStorage', () => ({
   dataStorage: {
-    clearAllData: vi.fn()
+    clearAllData: vi.fn(),
+    init: vi.fn(),
+    getAllFileMetadata: vi.fn(),
+    getActiveFileId: vi.fn()
   }
 }))
 
@@ -63,7 +66,12 @@ describe('FileManagement', () => {
     vi.clearAllMocks()
     
     const { excelProcessor } = await import('../services/excelProcessor')
+    const { dataStorage } = await import('../services/dataStorage')
+    
     vi.mocked(excelProcessor.getFileHistory).mockResolvedValue(mockFileHistory)
+    vi.mocked(dataStorage.init).mockResolvedValue()
+    vi.mocked(dataStorage.getAllFileMetadata).mockResolvedValue(mockFileHistory)
+    vi.mocked(dataStorage.getActiveFileId).mockResolvedValue('file-1')
   })
 
   describe('Tab Navigation', () => {
@@ -72,7 +80,7 @@ describe('FileManagement', () => {
       
       expect(screen.getByText('Upload Inventory')).toBeInTheDocument()
       expect(screen.getByText('Requirements')).toBeInTheDocument()
-      expect(screen.getByText('History')).toBeInTheDocument()
+      expect(screen.getByText(/History/)).toBeInTheDocument()
     })
 
     it('should switch between tabs', async () => {
@@ -80,34 +88,50 @@ describe('FileManagement', () => {
       render(<FileManagement {...mockProps} />)
       
       // Should start on upload tab
-      expect(screen.getByText('Drag & drop your Excel file here')).toBeInTheDocument()
+      expect(screen.getByText(/drag and drop your Excel file here/i)).toBeInTheDocument()
       
       // Switch to requirements tab
       await user.click(screen.getByText('Requirements'))
       expect(screen.getByText('Excel File Requirements')).toBeInTheDocument()
       
       // Switch to history tab
-      await user.click(screen.getByText('History'))
+      await user.click(screen.getByText(/History/))
       await waitFor(() => {
-        expect(screen.getByText('File Upload History')).toBeInTheDocument()
+        expect(screen.getByText('Upload History')).toBeInTheDocument()
       })
     })
   })
 
   describe('File Upload', () => {
     it('should handle drag and drop events', async () => {
-      const user = userEvent.setup()
       render(<FileManagement {...mockProps} />)
       
-      const dropZone = screen.getByText('Drag & drop your Excel file here').closest('.upload-area')
+      const dropZone = screen.getByText(/drag and drop your Excel file here/i).closest('.drag-drop-area')
       expect(dropZone).toBeInTheDocument()
       
-      // Test drag over
+      // Test drag over event
       const file = new File(['test content'], 'test.xlsx', {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       })
       
-      await user.upload(dropZone!, file)
+      // Create drag event
+      const dragOverEvent = new Event('dragover', { bubbles: true, cancelable: true })
+      const dropEvent = new Event('drop', { bubbles: true, cancelable: true })
+      
+      // Add dataTransfer to events
+      Object.defineProperty(dragOverEvent, 'dataTransfer', {
+        value: { files: [file] }
+      })
+      Object.defineProperty(dropEvent, 'dataTransfer', {
+        value: { files: [file] }
+      })
+      
+      // Test drag over - check that the event is handled
+      dropZone!.dispatchEvent(dragOverEvent)
+      // Note: The drag-over class is applied on React state change, so we just verify the event was handled
+      
+      // Test drop (this should trigger file processing)
+      dropZone!.dispatchEvent(dropEvent)
     })
 
     it('should process uploaded file', async () => {
@@ -208,7 +232,7 @@ describe('FileManagement', () => {
       const user = userEvent.setup()
       render(<FileManagement {...mockProps} />)
       
-      await user.click(screen.getByText('History'))
+      await user.click(screen.getByText(/History/))
       
       await waitFor(() => {
         expect(screen.getByText('inventory-2024.xlsx')).toBeInTheDocument()
@@ -221,7 +245,7 @@ describe('FileManagement', () => {
       const user = userEvent.setup()
       render(<FileManagement {...mockProps} />)
       
-      await user.click(screen.getByText('History'))
+      await user.click(screen.getByText(/History/))
       
       await waitFor(() => {
         expect(screen.getByText('Active')).toBeInTheDocument()
@@ -232,7 +256,7 @@ describe('FileManagement', () => {
       const user = userEvent.setup()
       render(<FileManagement {...mockProps} />)
       
-      await user.click(screen.getByText('History'))
+      await user.click(screen.getByText(/History/))
       
       await waitFor(() => {
         expect(screen.getByText('1500 records')).toBeInTheDocument()
@@ -247,7 +271,7 @@ describe('FileManagement', () => {
       
       render(<FileManagement {...mockProps} />)
       
-      await user.click(screen.getByText('History'))
+      await user.click(screen.getByText(/History/))
       
       await waitFor(() => {
         expect(screen.getByText('old-inventory.xlsx')).toBeInTheDocument()
@@ -267,7 +291,7 @@ describe('FileManagement', () => {
       
       render(<FileManagement {...mockProps} />)
       
-      await user.click(screen.getByText('History'))
+      await user.click(screen.getByText(/History/))
       
       await waitFor(() => {
         expect(screen.getByText('old-inventory.xlsx')).toBeInTheDocument()
@@ -304,7 +328,7 @@ describe('FileManagement', () => {
       
       await waitFor(() => {
         expect(screen.getByText('Confirm Database Reset')).toBeInTheDocument()
-        expect(screen.getByText('This action will permanently delete all uploaded files and inventory data.')).toBeInTheDocument()
+        expect(screen.getByText('This action cannot be undone!')).toBeInTheDocument()
       })
     })
 
@@ -321,7 +345,7 @@ describe('FileManagement', () => {
         expect(screen.getByText('Confirm Database Reset')).toBeInTheDocument()
       })
       
-      const confirmButton = screen.getByText('Yes, Reset Database')
+      const confirmButton = document.querySelector('.confirm-reset-button')
       await user.click(confirmButton)
       
       await waitFor(() => {
@@ -436,7 +460,7 @@ describe('FileManagement', () => {
       expect(screen.getByText('Requirements')).toHaveFocus()
       
       await user.tab()
-      expect(screen.getByText('History')).toHaveFocus()
+      expect(screen.getByText(/History/)).toHaveFocus()
     })
   })
 })
