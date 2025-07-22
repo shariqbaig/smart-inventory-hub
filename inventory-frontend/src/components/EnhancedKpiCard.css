@@ -1,0 +1,180 @@
+/* Enhanced KPI Card Styles with Theme Support */
+.kpi-card {
+  background: var(--bg-card);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-light);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 280px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--color);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.kpi-card.clickable {
+  cursor: pointer;
+}
+
+.kpi-card.clickable::after {
+  content: '';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 24px;
+  height: 24px;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>') no-repeat center;
+  background-size: 16px;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.kpi-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.kpi-card:hover::before {
+  height: 6px;
+  opacity: 1;
+}
+
+.kpi-card.clickable:hover::after {
+  opacity: 0.8;
+  transform: translateX(3px);
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.kpi-header {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.kpi-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+}
+
+.kpi-content {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.kpi-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  position: relative;
+  background: linear-gradient(135deg, var(--color), color-mix(in srgb, var(--color) 80%, black));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+}
+
+.kpi-card:hover .kpi-value {
+  transform: scale(1.05);
+}
+
+.kpi-unit {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #9ca3af;
+  align-self: flex-end;
+  margin-bottom: 0.25rem;
+}
+
+/* Individual card themes */
+.kpi-card[data-theme="blue"] {
+  --color: #3b82f6;
+}
+
+.kpi-card[data-theme="red"] {
+  --color: #ef4444;
+}
+
+.kpi-card[data-theme="green"] {
+  --color: #10b981;
+}
+
+.kpi-card[data-theme="orange"] {
+  --color: #f59e0b;
+}
+
+.kpi-card[data-theme="purple"] {
+  --color: #8b5cf6;
+}
+
+/* Special animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+      0 10px 10px -5px rgba(0, 0, 0, 0.04),
+      0 0 0 0 rgba(var(--color-rgb), 0);
+  }
+  50% {
+    box-shadow: 
+      0 25px 50px -12px rgba(0, 0, 0, 0.25),
+      0 0 0 8px rgba(var(--color-rgb), 0.1);
+  }
+}
+
+.kpi-card[data-theme="red"] {
+  --color-rgb: 239, 68, 68;
+}
+
+.kpi-card[data-theme="red"]:hover {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .kpi-card {
+    padding: 1.5rem;
+    min-width: auto;
+  }
+  
+  .kpi-value {
+    font-size: 2rem;
+  }
+  
+  .kpi-card.clickable::after {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-card {
+    padding: 1rem;
+  }
+  
+  .kpi-value {
+    font-size: 1.75rem;
+  }
+  
+  .kpi-title {
+    font-size: 0.75rem;
+  }
+}

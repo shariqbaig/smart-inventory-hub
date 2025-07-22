@@ -1,0 +1,252 @@
+@import '../styles/themes.css';
+
+.plants-list {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: var(--bg-primary);
+  min-height: 100vh;
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.plants-list-header {
+  margin-bottom: 24px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.back-button {
+  background: var(--btn-primary-bg);
+  color: var(--text-inverse);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background: var(--btn-primary-hover);
+}
+
+.plants-list h2 {
+  margin: 0;
+  font-size: 28px;
+  color: var(--text-primary);
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: var(--bg-card);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  border: 1px solid var(--border-light);
+}
+
+.summary-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-value.blocked {
+  color: var(--status-error);
+}
+
+.stat-value.percentage {
+  color: var(--status-warning);
+}
+
+.plants-table-container {
+  background: var(--bg-card);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+  overflow-x: auto;
+}
+
+.plants-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.plants-table th {
+  background: var(--bg-secondary);
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+  white-space: nowrap;
+}
+
+.plants-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.plants-table th.sortable:hover {
+  background: var(--bg-hover);
+}
+
+.plants-table td {
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+.plants-table tr:hover {
+  background: var(--bg-hover);
+}
+
+.plant-code {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.quantity {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.quantity.blocked {
+  color: var(--status-error);
+  font-weight: 600;
+}
+
+.count {
+  text-align: center;
+  font-weight: 500;
+}
+
+.percentage {
+  text-align: center;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.percentage.low-blocked {
+  color: var(--status-success);
+}
+
+.percentage.medium-blocked {
+  color: var(--status-warning);
+}
+
+.percentage.high-blocked {
+  color: var(--status-error);
+}
+
+.locations {
+  font-size: 12px;
+  color: var(--text-secondary);
+  max-width: 200px;
+}
+
+.drill-down-button {
+  background: var(--status-success);
+  color: var(--text-inverse);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.drill-down-button:hover {
+  background: var(--primary-green);
+  opacity: 0.9;
+}
+
+.plants-list-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: var(--text-secondary);
+}
+
+.plants-list-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: var(--status-error);
+}
+
+.retry-button {
+  background: var(--status-error);
+  color: var(--text-inverse);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .plants-list {
+    padding: 16px;
+  }
+
+  .header-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .plants-table {
+    font-size: 12px;
+  }
+
+  .plants-table th,
+  .plants-table td {
+    padding: 8px 4px;
+  }
+
+  .locations {
+    display: none;
+  }
+}

@@ -1,0 +1,220 @@
+/* ============================================
+   THEME VARIABLES - Light & Dark Mode Support
+   ============================================ */
+
+/* Default (Light Theme) */
+:root,
+:root.light-theme {
+  /* Primary Colors */
+  --primary-blue: #0F4C8C;
+  --primary-green: #00A651;
+  --primary-yellow: #FFE600;
+  --primary-orange: #FF6900;
+  --primary-red: #E60026;
+  --accent-blue: #1A5AA0;
+
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-hover: rgba(0, 0, 0, 0.05);
+  --bg-active: rgba(0, 0, 0, 0.1);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Text Colors */
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-tertiary: #718096;
+  --text-inverse: #ffffff;
+  --text-muted: #a0aec0;
+
+  /* Border Colors */
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e0;
+  --border-dark: #a0aec0;
+  --border-focus: var(--primary-blue);
+
+  /* Button Colors */
+  --btn-primary-bg: var(--primary-blue);
+  --btn-primary-hover: #0d3f74;
+  --btn-secondary-bg: var(--bg-tertiary);
+  --btn-secondary-hover: var(--bg-hover);
+
+  /* Chart Colors */
+  --chart-bg: var(--bg-card);
+  --chart-grid: #f0f0f0;
+  --chart-text: var(--text-secondary);
+
+  /* Status Colors */
+  --status-success: #00A651;
+  --status-warning: #d69e2e;
+  --status-error: #E60026;
+  --status-info: var(--primary-blue);
+
+  /* Brand Colors */
+  --brand-blue: #0F4C8C;
+  --brand-blue-light: #3182ce;
+  --brand-blue-dark: #0d3f74;
+  --brand-green: #00A651;
+  --brand-yellow: #FFE600;
+  --brand-orange: #FF6900;
+  --brand-red: #E60026;
+
+  /* Gradients */
+  --gradient-blue: linear-gradient(135deg, #0F4C8C 0%, #1A5AA0 100%);
+  --gradient-green: linear-gradient(135deg, #00A651 0%, #38a169 100%);
+  --gradient-red: linear-gradient(135deg, #E60026 0%, #e53e3e 100%);
+
+  /* Gray scale */
+  --gray-50: #f9fafb;
+  --gray-200: #e5e7eb;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Input Colors */
+  --input-bg: var(--bg-card);
+  --input-border: var(--border-medium);
+  --input-focus: var(--border-focus);
+  --input-placeholder: var(--text-tertiary);
+}
+
+/* Dark Theme */
+:root.dark-theme {
+  /* Primary Colors - Slightly adjusted for dark mode */
+  --primary-blue: #3182ce;
+  --primary-green: #38a169;
+  --primary-yellow: #d69e2e;
+  --primary-orange: #dd6b20;
+  --primary-red: #e53e3e;
+  --accent-blue: #4299e1;
+
+  /* Background Colors */
+  --bg-primary: #1a202c;
+  --bg-secondary: #2d3748;
+  --bg-tertiary: #4a5568;
+  --bg-card: #2d3748;
+  --bg-hover: rgba(255, 255, 255, 0.1);
+  --bg-active: rgba(255, 255, 255, 0.15);
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Text Colors */
+  --text-primary: #f7fafc;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #cbd5e0;
+  --text-inverse: #1a202c;
+  --text-muted: #a0aec0;
+
+  /* Border Colors */
+  --border-light: #4a5568;
+  --border-medium: #718096;
+  --border-dark: #a0aec0;
+  --border-focus: var(--primary-blue);
+
+  /* Button Colors */
+  --btn-primary-bg: var(--primary-blue);
+  --btn-primary-hover: #2c5aa0;
+  --btn-secondary-bg: var(--bg-tertiary);
+  --btn-secondary-hover: var(--bg-hover);
+
+  /* Chart Colors */
+  --chart-bg: var(--bg-card);
+  --chart-grid: #4a5568;
+  --chart-text: var(--text-secondary);
+  
+  /* Chart specific overrides for dark mode */
+  --chart-axis-color: var(--text-tertiary);
+  --chart-tooltip-bg: var(--bg-tertiary);
+  --chart-tooltip-text: var(--text-primary);
+
+  /* Status Colors - Adjusted for dark mode */
+  --status-success: #38a169;
+  --status-warning: #d69e2e;
+  --status-error: #e53e3e;
+  --status-info: var(--primary-blue);
+
+  /* Brand Colors - Dark mode adjusted */
+  --brand-blue: #3182ce;
+  --brand-blue-light: #4299e1;
+  --brand-blue-dark: #2c5aa0;
+  --brand-green: #38a169;
+  --brand-yellow: #d69e2e;
+  --brand-orange: #dd6b20;
+  --brand-red: #e53e3e;
+
+  /* Gradients - Dark mode adjusted */
+  --gradient-blue: linear-gradient(135deg, #3182ce 0%, #4299e1 100%);
+  --gradient-green: linear-gradient(135deg, #38a169 0%, #48bb78 100%);
+  --gradient-red: linear-gradient(135deg, #e53e3e 0%, #f56565 100%);
+
+  /* Gray scale - Dark mode */
+  --gray-50: #4a5568;
+  --gray-200: #718096;
+  --gray-600: #e2e8f0;
+  --gray-700: #f7fafc;
+  --gray-800: #ffffff;
+
+  /* Shadow - Adjusted for dark mode */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+
+  /* Input Colors */
+  --input-bg: var(--bg-tertiary);
+  --input-border: var(--border-medium);
+  --input-focus: var(--border-focus);
+  --input-placeholder: var(--text-tertiary);
+}
+
+/* Smooth theme transition */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure images and icons adapt to theme */
+img {
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+:root.dark-theme img:not(.no-theme-filter) {
+  filter: brightness(0.9) contrast(1.1);
+}
+
+/* Scrollbar theming */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-dark);
+}
+
+/* Selection colors */
+::selection {
+  background-color: var(--primary-blue);
+  color: var(--text-inverse);
+}
+
+/* Focus outline for accessibility */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}

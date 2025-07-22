@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Test</title>
+    <style>
+        /* Test the theme CSS variables */
+        :root,
+        :root.light-theme {
+            --bg-primary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --primary-blue: #0F4C8C;
+            --border-light: #e2e8f0;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        :root.dark-theme {
+            --bg-primary: #1a202c;
+            --bg-card: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --primary-blue: #3182ce;
+            --border-light: #4a5568;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-demo {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1rem 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        .toggle-button {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        h1 {
+            color: var(--text-primary);
+        }
+
+        p {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-demo">
+        <h1>🎨 Theme Toggle Test</h1>
+        
+        <div class="card">
+            <h2>Theme Variables Test</h2>
+            <p>This card demonstrates the theme system using CSS variables.</p>
+            <button class="toggle-button" onclick="toggleTheme()">
+                Toggle Theme
+            </button>
+        </div>
+        
+        <div class="card">
+            <h2>Dashboard Elements</h2>
+            <p>Background adapts to light/dark theme</p>
+            <p>Text colors automatically adjust</p>
+            <p>Shadows and borders respond to theme</p>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const root = document.documentElement;
+            const currentTheme = root.classList.contains('dark-theme') ? 'dark' : 'light';
+            
+            if (currentTheme === 'light') {
+                root.classList.remove('light-theme');
+                root.classList.add('dark-theme');
+            } else {
+                root.classList.remove('dark-theme');
+                root.classList.add('light-theme');
+            }
+            
+            console.log('Theme switched to:', currentTheme === 'light' ? 'dark' : 'light');
+        }
+    </script>
+</body>
+</html>
