@@ -8,14 +8,15 @@ const ThemeToggle: React.FC = () => {
   return (
     <div className="theme-toggle-container">
       <button
+        type="button"
         className={`theme-toggle ${isDarkMode ? 'dark' : 'light'}`}
         onClick={toggleTheme}
-        aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+        aria-label="Toggle theme"
         title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
       >
         <div className="toggle-track">
           <div className="toggle-thumb">
-            <span className="toggle-icon">
+            <span className="toggle-icon" data-testid={isDarkMode ? 'moon-icon' : 'sun-icon'}>
               {isDarkMode ? '🌙' : '☀️'}
             </span>
           </div>

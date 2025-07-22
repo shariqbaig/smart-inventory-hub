@@ -6,7 +6,7 @@ import ThemeToggle from './ThemeToggle'
 
 // Mock the ThemeContext
 const mockUseTheme = {
-  theme: 'light' as const,
+  isDarkMode: false,
   toggleTheme: vi.fn()
 }
 
@@ -21,6 +21,7 @@ vi.mock('../contexts/ThemeContext', async () => {
 describe('ThemeToggle', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockUseTheme.isDarkMode = false
   })
 
   it('should render theme toggle button', () => {
@@ -40,7 +41,7 @@ describe('ThemeToggle', () => {
   })
 
   it('should show moon icon in dark theme', () => {
-    mockUseTheme.theme = 'dark'
+    mockUseTheme.isDarkMode = true
     render(<ThemeToggle />)
     
     const moonIcon = screen.getByTestId('moon-icon')

@@ -338,25 +338,28 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
             <h2>File Management</h2>
             <p>Upload, manage, and validate your Excel inventory files</p>
           </div>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="close-button" onClick={onClose} aria-label="Close" tabIndex={4}>×</button>
         </div>
 
         <div className="tab-navigation">
           <button 
             className={`tab-button ${activeTab === 'upload' ? 'active' : ''}`}
             onClick={() => setActiveTab('upload')}
+            tabIndex={1}
           >
-            Upload
+            Upload Inventory
           </button>
           <button 
             className={`tab-button ${activeTab === 'requirements' ? 'active' : ''}`}
             onClick={() => setActiveTab('requirements')}
+            tabIndex={2}
           >
             Requirements
           </button>
           <button 
             className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => setActiveTab('history')}
+            tabIndex={3}
           >
             History ({uploadedFiles.length})
           </button>
@@ -409,6 +412,7 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                 accept=".xlsx,.xls"
                 onChange={handleFileInputChange}
                 style={{ display: 'none' }}
+                aria-label="Click to browse for files"
               />
 
               <div className="template-section compact">
@@ -902,7 +906,7 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
           <div className="reset-confirm-overlay">
             <div className="reset-confirm-modal">
               <div className="reset-confirm-header">
-                <h3>⚠️ Reset Database</h3>
+                <h3>Confirm Database Reset</h3>
               </div>
               
               <div className="reset-confirm-content">

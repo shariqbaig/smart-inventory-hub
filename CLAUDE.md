@@ -125,6 +125,10 @@ InventoryHub Database (v1)
 - **Custom Render**: React Testing Library with all providers
 - **Performance Testing**: Async operation and large dataset handling
 
+### Development Testing Guidelines
+- Make sure to add test cases for the functionality to develop and keep the test cases up-to-date
+- Don't run the application to test, always run the test cases and add as much test cases as you can and test only using test cases
+
 ## Development Workflows
 
 ### File Processing Development
@@ -202,3 +206,4 @@ inventoryService.getDataCount()   # Get current loaded record count
 2. Use pagination for datasets >1000 items
 3. Clear browser cache if IndexedDB becomes corrupted
 4. Check Network tab for asset loading issues in production
+```
