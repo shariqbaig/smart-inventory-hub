@@ -9,9 +9,9 @@ A modern **frontend-only** inventory management dashboard that runs entirely in 
 
 ## 🚀 Live Demo
 
-**[View Live Application on Netlify](https://your-app-name.netlify.app)**
+**[View Live Application on Netlify](https://smart-inventory-hub.netlify.app)**
 
-Try the application with sample data from the `examples/` folder or download the template directly from the app.
+Try the application by creating sample data using the template directly from the app.
 
 ## ✨ Features
 
@@ -205,8 +205,7 @@ inventory-frontend/
 │   ├── types/             # TypeScript definitions
 │   ├── contexts/          # React contexts (ThemeContext)
 │   └── test/              # Test utilities and setup
-├── public/                # Static assets
-└── examples/              # Sample Excel files
+└── public/                # Static assets
 ```
 
 ### Key Services
