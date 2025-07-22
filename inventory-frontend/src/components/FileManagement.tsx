@@ -2,6 +2,19 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { excelProcessor, type ValidationResult } from '../services/excelProcessor';
 import { dataStorage, type FileMetadata } from '../services/dataStorage';
 import './FileManagement.css';
+import { 
+  FiUpload, FiDownload, FiTrash2, FiShield, FiSettings, FiAward,
+  FiClipboard, FiFileText, FiFolder, FiTarget, FiZap
+} from 'react-icons/fi';
+import { 
+  BiPackage, BiBuilding, BiMap, BiRuler, BiCheck, BiTransfer, 
+  BiSearchAlt, BiLockAlt, BiMoney, BiTime, BiCalendar, BiPurchaseTag, 
+  BiText, BiHappy, BiError, BiCheckShield, BiData, BiCog
+} from 'react-icons/bi';
+import { 
+  HiOutlineExclamation, HiOutlineInformationCircle, HiOutlineSparkles,
+  HiOutlineLightBulb, HiOutlineClipboardCheck
+} from 'react-icons/hi';
 
 interface FileManagementProps {
   onUploadSuccess: (fileInfo: any) => void;
@@ -19,6 +32,9 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [showValidation, setShowValidation] = useState(false);
+  const [activatingFileId, setActivatingFileId] = useState<string | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -49,9 +65,19 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
     try {
       setLoadingHistory(true);
       const files = await dataStorage.getAllFileMetadata();
+      
       // Sort by upload date, most recent first
       files.sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
-      setUploadedFiles(files);
+      
+      // Ensure only one file is marked as active (get the actual active file from storage)
+      const activeFileId = await dataStorage.getActiveFileId();
+      const correctedFiles = files.map(file => ({
+        ...file,
+        isActive: file.id === activeFileId
+      }));
+      
+      console.log('Loaded file history:', correctedFiles.map(f => ({ id: f.id, name: f.name, isActive: f.isActive })));
+      setUploadedFiles(correctedFiles);
     } catch (err) {
       console.error('Error loading file history:', err);
       setError('Failed to load file history');
@@ -101,13 +127,16 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
       if (result.success) {
         setValidationResult(result.validation);
         
-        // If file has errors, switch to history tab and keep popup open
-        if (!result.validation.isValid) {
+        // Check if file has ERRORS (not just warnings)
+        const hasErrors = result.validation.errors.length > 0;
+        
+        if (hasErrors) {
+          // File has errors - don't auto-activate, show validation results
           setShowValidation(true);
           setActiveTab('history'); // Switch to history tab to see the uploaded file
           await loadFileHistory(); // Refresh history to show new file at top
         } else {
-          // File is valid, close popup and go to dashboard
+          // File is valid (no errors, may have warnings) - auto-activate and go to dashboard
           await loadFileHistory();
           onUploadSuccess({
             fileId: result.fileId,
@@ -115,6 +144,12 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
             recordCount: result.recordCount,
             validation: result.validation
           });
+          
+          // Show validation results if there are warnings, but still close popup
+          if (result.validation.warnings.length > 0) {
+            console.log(`File activated with ${result.validation.warnings.length} warnings`);
+          }
+          
           onClose(); // Close the file management popup
           return; // Exit early
         }
@@ -165,28 +200,51 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
 
   const handleActivateFile = async (fileId: string) => {
     try {
+      console.log('Starting file activation for fileId:', fileId);
+      
       // Show loading state
       setError(null);
+      setActivatingFileId(fileId);
       
       // Activate the file
+      console.log('Calling excelProcessor.activateFile...');
       await excelProcessor.activateFile(fileId);
+      console.log('File activation completed successfully');
       
       // Force inventory service to refresh its data immediately after activation
+      console.log('Refreshing inventory service data...');
       const { inventoryService } = await import('../services/inventoryService');
+      
+      // Add a delay to ensure the data is properly persisted and available
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Clear any existing data to force fresh load
+      inventoryService.clearInventoryData();
+      
       await inventoryService.refreshData();
+      console.log('Inventory service refreshed');
+      
+      // Verify data was loaded
+      const dataCount = inventoryService.getDataCount();
+      console.log(`Verification: Inventory service now has ${dataCount} records loaded`);
       
       // Get updated file metadata
+      console.log('Fetching updated file metadata...');
       const fileMetadata = await excelProcessor.getFileHistory();
       const activatedFile = fileMetadata.find(f => f.id === fileId);
+      console.log('Activated file metadata:', activatedFile);
       
       // Refresh file history to show updated status
+      console.log('Refreshing file history display...');
       await loadFileHistory();
       
       // Notify parent component about successful activation
-      onUploadSuccess({
+      console.log('Notifying parent component...');
+      const uploadSuccessPromise = onUploadSuccess({
         fileId,
-        message: 'File activated successfully',
+        message: `File "${activatedFile?.name || 'Unknown'}" activated successfully`,
         recordCount: activatedFile?.recordCount || 0,
+        isActivation: true, // Flag to indicate this is an activation, not new upload
         validation: {
           isValid: true,
           errors: [],
@@ -200,11 +258,24 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
         }
       });
       
+      // Wait for dashboard data refresh to complete before closing modal
+      console.log('Waiting for dashboard refresh to complete...');
+      if (uploadSuccessPromise && typeof uploadSuccessPromise.then === 'function') {
+        await uploadSuccessPromise;
+        console.log('Dashboard refresh completed, now closing modal');
+      }
+      
+      // Add a small delay to ensure UI state is updated before closing
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       // Close the modal
+      console.log('Closing modal after successful activation');
       onClose();
     } catch (error) {
       console.error('Error activating file:', error);
       setError('Failed to activate file: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setActivatingFileId(null);
     }
   };
 
@@ -227,21 +298,32 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
   };
 
   // Debug method to completely reset the database
-  const handleResetDatabase = async () => {
-    if (!confirm('This will completely reset the database and remove all files. Are you sure?')) {
-      return;
-    }
+  const handleResetDatabase = () => {
+    setShowResetConfirm(true);
+  };
+
+  const confirmResetDatabase = async () => {
+    setIsResetting(true);
     
     try {
       const { resetApplication } = await import('../services/init');
       await resetApplication();
       await loadFileHistory();
       setError(null);
-      alert('Database reset successfully. You can now upload files fresh.');
+      setShowResetConfirm(false);
+      
+      // Show success message by switching to upload tab
+      setActiveTab('upload');
     } catch (error) {
       console.error('Failed to reset database:', error);
       setError('Failed to reset database: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsResetting(false);
     }
+  };
+
+  const cancelResetDatabase = () => {
+    setShowResetConfirm(false);
   };
 
 
@@ -316,7 +398,9 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                   </div>
                 ) : (
                   <>
-                    <div className="upload-icon">📤</div>
+                    <div className="upload-icon">
+                      <FiUpload size={48} />
+                    </div>
                     <p><strong>Click to select</strong> or drag and drop your Excel file here</p>
                     <p className="file-types">
                       Supported formats: .xlsx, .xls (Max size: 10MB)
@@ -333,24 +417,30 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                 style={{ display: 'none' }}
               />
 
-              <div className="template-section">
-                <h4>Need a template?</h4>
-                <p>Download our Excel template with the required columns and sample data.</p>
-                <button className="template-button" onClick={downloadTemplate}>
-                  📥 Download Template
-                </button>
-                
-                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
-                  <h4 style={{ color: '#e60026' }}>Debug Tools</h4>
-                  <p style={{ fontSize: '0.9rem', color: '#666' }}>If you're having data issues, try resetting the database.</p>
-                  <button 
-                    className="template-button" 
-                    onClick={handleResetDatabase}
-                    style={{ backgroundColor: '#e60026', color: 'white' }}
-                  >
-                    🗑️ Reset Database
-                  </button>
+              <div className="template-section compact">
+                <div className="template-actions">
+                  <div className="action-group">
+                    <h4>Need a template?</h4>
+                    <button className="template-button primary" onClick={downloadTemplate}>
+                      <FiDownload size={16} />
+                      Download Template
+                    </button>
+                  </div>
+                  
+                  <div className="action-group debug-group">
+                    <h4>Debug Tools</h4>
+                    <button 
+                      className="template-button danger" 
+                      onClick={handleResetDatabase}
+                    >
+                      <FiTrash2 size={16} />
+                      Reset Database
+                    </button>
+                  </div>
                 </div>
+                <p className="compact-description">
+                  Download our template with required columns, or reset the database if you're having data issues.
+                </p>
               </div>
             </div>
           )}
@@ -358,14 +448,21 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
           {activeTab === 'requirements' && (
             <div className="requirements-section">
               <div className="requirements-intro">
-                <h3>📋 Excel File Requirements</h3>
+                <h3>
+                  <FiClipboard size={24} className="section-icon" />
+                  Excel File Requirements
+                </h3>
                 <p>Ensure your Excel file meets these specifications for successful upload and validation. Use our template as a starting point to avoid common formatting issues.</p>
                 
                 <div className="template-section">
-                  <h4>📥 Need a template?</h4>
+                  <h4>
+                    <FiDownload size={20} className="template-icon" />
+                    Need a template?
+                  </h4>
                   <p>Download our Excel template with the required columns and sample data.</p>
                   <button className="template-button" onClick={downloadTemplate}>
-                    📄 Download Template
+                    <FiFileText size={16} />
+                    Download Template
                   </button>
                 </div>
               </div>
@@ -373,14 +470,21 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
               <div className="requirements-content">
                 <div className="columns-section">
                   <h4 className="section-title">
-                    <span className="title-icon">🔴</span>
-                    Required Columns
-                    <span className="requirement-badge required">Must Include</span>
+                    <HiOutlineExclamation className="title-icon required-icon" size={28} />
+                    <span className="section-title-text">Required Columns</span>
+                    <span className="requirement-badge required">
+                      <FiShield size={12} />
+                      Must Include
+                    </span>
                   </h4>
                   <div className="columns-grid">
                     <div className="column-item required">
                       <div className="column-header">
-                        <h5>📦 Material</h5>
+                        <h5>
+                          <BiPackage className="column-icon required-column-icon" />
+                          <span className="column-title">Material</span>
+                          <span className="required-star">*</span>
+                        </h5>
                         <span className="column-type">Text/Number</span>
                       </div>
                       <p><strong>Purpose:</strong> Unique material code or number</p>
@@ -390,7 +494,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item required">
                       <div className="column-header">
-                        <h5>📝 Material Description</h5>
+                        <h5>
+                          <BiText className="column-icon required-column-icon" />
+                          <span className="column-title">Material Description</span>
+                          <span className="required-star">*</span>
+                        </h5>
                         <span className="column-type">Text</span>
                       </div>
                       <p><strong>Purpose:</strong> Descriptive name of the material</p>
@@ -400,7 +508,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item required">
                       <div className="column-header">
-                        <h5>🏭 Plant</h5>
+                        <h5>
+                          <BiBuilding className="column-icon required-column-icon" />
+                          <span className="column-title">Plant</span>
+                          <span className="required-star">*</span>
+                        </h5>
                         <span className="column-type">Text</span>
                       </div>
                       <p><strong>Purpose:</strong> Manufacturing plant code</p>
@@ -410,7 +522,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item required">
                       <div className="column-header">
-                        <h5>📍 Storage Location</h5>
+                        <h5>
+                          <BiMap className="column-icon required-column-icon" />
+                          <span className="column-title">Storage Location</span>
+                          <span className="required-star">*</span>
+                        </h5>
                         <span className="column-type">Text</span>
                       </div>
                       <p><strong>Purpose:</strong> Storage location code</p>
@@ -420,7 +536,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item required">
                       <div className="column-header">
-                        <h5>📏 Base Unit of Measure</h5>
+                        <h5>
+                          <BiRuler className="column-icon required-column-icon" />
+                          <span className="column-title">Base Unit of Measure</span>
+                          <span className="required-star">*</span>
+                        </h5>
                         <span className="column-type">Text</span>
                       </div>
                       <p><strong>Purpose:</strong> Unit of measurement</p>
@@ -430,7 +550,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item required">
                       <div className="column-header">
-                        <h5>✅ Unrestricted</h5>
+                        <h5>
+                          <BiCheck className="column-icon required-column-icon success-icon" />
+                          <span className="column-title">Unrestricted Stock</span>
+                          <span className="required-star">*</span>
+                        </h5>
                         <span className="column-type">Number</span>
                       </div>
                       <p><strong>Purpose:</strong> Available stock quantity</p>
@@ -440,7 +564,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item required">
                       <div className="column-header">
-                        <h5>🚫 Blocked</h5>
+                        <h5>
+                          <BiError className="column-icon required-column-icon error-icon" />
+                          <span className="column-title">Blocked Stock</span>
+                          <span className="required-star">*</span>
+                        </h5>
                         <span className="column-type">Number</span>
                       </div>
                       <p><strong>Purpose:</strong> Blocked stock quantity</p>
@@ -452,14 +580,21 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
 
                 <div className="columns-section">
                   <h4 className="section-title">
-                    <span className="title-icon">🟢</span>
-                    Optional Columns
-                    <span className="requirement-badge optional">Nice to Have</span>
+                    <HiOutlineInformationCircle className="title-icon optional-icon" size={28} />
+                    <span className="section-title-text">Optional Columns</span>
+                    <span className="requirement-badge optional">
+                      <HiOutlineSparkles size={12} />
+                      Nice to Have
+                    </span>
                   </h4>
                   <div className="columns-grid">
                     <div className="column-item optional">
                       <div className="column-header">
-                        <h5>🔄 Stock in Transfer</h5>
+                        <h5>
+                          <BiTransfer className="column-icon optional-column-icon" />
+                          <span className="column-title">Stock in Transfer</span>
+                          <span className="optional-badge">Optional</span>
+                        </h5>
                         <span className="column-type">Number</span>
                       </div>
                       <p><strong>Purpose:</strong> Stock currently being transferred</p>
@@ -468,7 +603,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item optional">
                       <div className="column-header">
-                        <h5>🔍 In Quality Inspection</h5>
+                        <h5>
+                          <BiSearchAlt className="column-icon optional-column-icon" />
+                          <span className="column-title">In Quality Inspection</span>
+                          <span className="optional-badge">Optional</span>
+                        </h5>
                         <span className="column-type">Number</span>
                       </div>
                       <p><strong>Purpose:</strong> Stock under quality inspection</p>
@@ -477,7 +616,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item optional">
                       <div className="column-header">
-                        <h5>⚠️ Restricted-Use Stock</h5>
+                        <h5>
+                          <BiLockAlt className="column-icon optional-column-icon" />
+                          <span className="column-title">Restricted-Use Stock</span>
+                          <span className="optional-badge">Optional</span>
+                        </h5>
                         <span className="column-type">Number</span>
                       </div>
                       <p><strong>Purpose:</strong> Stock with restricted usage</p>
@@ -486,7 +629,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item optional">
                       <div className="column-header">
-                        <h5>💰 Value Unrestricted</h5>
+                        <h5>
+                          <BiMoney className="column-icon optional-column-icon" />
+                          <span className="column-title">Value Unrestricted</span>
+                          <span className="optional-badge">Optional</span>
+                        </h5>
                         <span className="column-type">Number</span>
                       </div>
                       <p><strong>Purpose:</strong> Monetary value of unrestricted stock</p>
@@ -495,7 +642,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item optional">
                       <div className="column-header">
-                        <h5>⏰ Total Shelf Life</h5>
+                        <h5>
+                          <BiTime className="column-icon optional-column-icon" />
+                          <span className="column-title">Total Shelf Life</span>
+                          <span className="optional-badge">Optional</span>
+                        </h5>
                         <span className="column-type">Number</span>
                       </div>
                       <p><strong>Purpose:</strong> Shelf life in days</p>
@@ -504,7 +655,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item optional">
                       <div className="column-header">
-                        <h5>📅 SLED/BBD</h5>
+                        <h5>
+                          <BiCalendar className="column-icon optional-column-icon" />
+                          <span className="column-title">SLED/BBD</span>
+                          <span className="optional-badge">Optional</span>
+                        </h5>
                         <span className="column-type">Date</span>
                       </div>
                       <p><strong>Purpose:</strong> Shelf life expiration date</p>
@@ -513,7 +668,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item optional">
                       <div className="column-header">
-                        <h5>🏭 Date of Manufacture</h5>
+                        <h5>
+                          <BiCalendar className="column-icon optional-column-icon" />
+                          <span className="column-title">Date of Manufacture</span>
+                          <span className="optional-badge">Optional</span>
+                        </h5>
                         <span className="column-type">Date</span>
                       </div>
                       <p><strong>Purpose:</strong> Manufacturing date</p>
@@ -522,7 +681,11 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="column-item optional">
                       <div className="column-header">
-                        <h5>🏷️ Batch</h5>
+                        <h5>
+                          <BiPurchaseTag className="column-icon optional-column-icon" />
+                          <span className="column-title">Batch</span>
+                          <span className="optional-badge">Optional</span>
+                        </h5>
                         <span className="column-type">Text</span>
                       </div>
                       <p><strong>Purpose:</strong> Batch or lot number</p>
@@ -533,48 +696,95 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
 
                 <div className="validation-section">
                   <h4 className="section-title">
-                    <span className="title-icon">✅</span>
-                    Validation Rules
-                    <span className="requirement-badge validation">Auto-Check</span>
+                    <HiOutlineClipboardCheck className="title-icon validation-icon" size={28} />
+                    <span className="section-title-text">Validation Rules</span>
+                    <span className="requirement-badge validation">
+                      <BiCheckShield size={12} />
+                      Auto-Check
+                    </span>
                   </h4>
                   <div className="validation-rules-grid">
                     <div className="rule-card">
-                      <div className="rule-icon">📦</div>
+                      <div className="rule-icon">
+                        <BiPackage size={24} />
+                      </div>
                       <div className="rule-content">
-                        <h6>Material Code Validation</h6>
+                        <h6>
+                          <BiCheckShield className="rule-check-icon" size={16} />
+                          Material Code Validation
+                        </h6>
                         <p>Must not be empty and should contain only letters, numbers, hyphens, and underscores</p>
+                        <div className="rule-examples">
+                          <span className="example-good">✓ MAT-001, PART_A1</span>
+                          <span className="example-bad">✗ Empty, Special@Chars</span>
+                        </div>
                       </div>
                     </div>
                     
                     <div className="rule-card">
-                      <div className="rule-icon">🏭</div>
+                      <div className="rule-icon">
+                        <BiBuilding size={24} />
+                      </div>
                       <div className="rule-content">
-                        <h6>Plant Code Required</h6>
+                        <h6>
+                          <BiCheckShield className="rule-check-icon" size={16} />
+                          Plant Code Required
+                        </h6>
                         <p>Plant code field cannot be empty for any inventory item</p>
+                        <div className="rule-examples">
+                          <span className="example-good">✓ Y012, PLANT_A</span>
+                          <span className="example-bad">✗ Empty, NULL</span>
+                        </div>
                       </div>
                     </div>
                     
                     <div className="rule-card">
-                      <div className="rule-icon">📍</div>
+                      <div className="rule-icon">
+                        <BiMap size={24} />
+                      </div>
                       <div className="rule-content">
-                        <h6>Storage Location Logic</h6>
+                        <h6>
+                          <BiCog className="rule-check-icon" size={16} />
+                          Storage Location Logic
+                        </h6>
                         <p>Can be empty only if there's stock in transfer (will show as 'SIT')</p>
+                        <div className="rule-examples">
+                          <span className="example-good">✓ YP01, SIT (if transfer &gt; 0)</span>
+                          <span className="example-bad">✗ Empty with no transfer</span>
+                        </div>
                       </div>
                     </div>
                     
                     <div className="rule-card">
-                      <div className="rule-icon">🔢</div>
+                      <div className="rule-icon">
+                        <BiData size={24} />
+                      </div>
                       <div className="rule-content">
-                        <h6>Quantity Fields</h6>
+                        <h6>
+                          <BiCheckShield className="rule-check-icon" size={16} />
+                          Quantity Fields
+                        </h6>
                         <p>All quantity fields must be numeric and non-negative numbers</p>
+                        <div className="rule-examples">
+                          <span className="example-good">✓ 100, 0, 2500.5</span>
+                          <span className="example-bad">✗ -50, ABC, NULL</span>
+                        </div>
                       </div>
                     </div>
                     
                     <div className="rule-card">
-                      <div className="rule-icon">🗑️</div>
+                      <div className="rule-icon">
+                        <BiHappy size={24} />
+                      </div>
                       <div className="rule-content">
-                        <h6>Empty Row Handling</h6>
+                        <h6>
+                          <FiSettings className="rule-check-icon" size={16} />
+                          Empty Row Handling
+                        </h6>
                         <p>Completely empty rows will be automatically ignored during processing</p>
+                        <div className="rule-examples">
+                          <span className="example-good">✓ Auto-cleanup enabled</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -582,13 +792,17 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
 
                 <div className="tips-section">
                   <h4 className="section-title">
-                    <span className="title-icon">💡</span>
-                    Best Practices
+                    <HiOutlineLightBulb className="title-icon tips-icon" size={28} />
+                    <span className="section-title-text">Best Practices</span>
+                    <span className="requirement-badge tips">
+                      <FiAward size={12} />
+                      Pro Tips
+                    </span>
                   </h4>
                   <div className="tips-grid">
                     <div className="tip-card">
                       <div className="tip-header">
-                        <span className="tip-icon">📂</span>
+                        <FiFolder className="tip-icon" />
                         <h6>File Format</h6>
                       </div>
                       <ul>
@@ -600,7 +814,7 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="tip-card">
                       <div className="tip-header">
-                        <span className="tip-icon">🎯</span>
+                        <FiTarget className="tip-icon" />
                         <h6>Data Quality</h6>
                       </div>
                       <ul>
@@ -612,7 +826,7 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     
                     <div className="tip-card">
                       <div className="tip-header">
-                        <span className="tip-icon">🚀</span>
+                        <FiZap className="tip-icon" />
                         <h6>Performance</h6>
                       </div>
                       <ul>
@@ -669,8 +883,9 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                           <button
                             className="activate-button"
                             onClick={() => handleActivateFile(file.id)}
+                            disabled={activatingFileId === file.id}
                           >
-                            Activate
+                            {activatingFileId === file.id ? 'Activating...' : 'Activate'}
                           </button>
                         )}
                         <button
@@ -687,6 +902,60 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
             </div>
           )}
         </div>
+
+        {/* Reset Database Confirmation Modal */}
+        {showResetConfirm && (
+          <div className="reset-confirm-overlay">
+            <div className="reset-confirm-modal">
+              <div className="reset-confirm-header">
+                <h3>⚠️ Reset Database</h3>
+              </div>
+              
+              <div className="reset-confirm-content">
+                <div className="reset-warning-message">
+                  <div className="warning-icon">🚨</div>
+                  <div className="warning-text">
+                    <p><strong>This action cannot be undone!</strong></p>
+                    <p>Resetting the database will:</p>
+                    <ul>
+                      <li>Delete all uploaded files and their data</li>
+                      <li>Clear all inventory analytics</li>
+                      <li>Reset the application to initial state</li>
+                    </ul>
+                    <p>Are you sure you want to continue?</p>
+                  </div>
+                </div>
+                
+                <div className="reset-confirm-actions">
+                  <button 
+                    className="cancel-reset-button"
+                    onClick={cancelResetDatabase}
+                    disabled={isResetting}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="confirm-reset-button"
+                    onClick={confirmResetDatabase}
+                    disabled={isResetting}
+                  >
+                    {isResetting ? (
+                      <>
+                        <div className="reset-spinner"></div>
+                        Resetting...
+                      </>
+                    ) : (
+                      <>
+                        <FiTrash2 size={16} />
+                        Reset Database
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showValidation && validationResult && (
           <div className="validation-results">

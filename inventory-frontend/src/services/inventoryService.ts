@@ -42,7 +42,10 @@ class InventoryService {
   // Load data from the active file
   async loadActiveFileData(): Promise<void> {
     try {
+      console.log('Loading active file data...');
       const activeFileId = await dataStorage.getActiveFileId();
+      console.log('Active file ID:', activeFileId);
+      
       if (!activeFileId) {
         console.warn('No active file found');
         this.clearInventoryData();
@@ -50,6 +53,8 @@ class InventoryService {
       }
 
       const rawData = await dataStorage.getInventoryData(activeFileId);
+      console.log(`Retrieved ${rawData.length} records from storage for file ${activeFileId}`);
+      
       if (!rawData.length) {
         console.warn('No data found for active file');
         this.clearInventoryData();
@@ -292,8 +297,56 @@ class InventoryService {
     await this.loadActiveFileData();
   }
 
+  // Load already processed data directly (used when activating existing files)
+  async loadStoredData(materialDetails: MaterialDetail[], fileId: string): Promise<void> {
+    console.log(`[InventoryService] Loading stored data: ${materialDetails.length} records for file ${fileId}`);
+    
+    // Clear existing data first
+    this.inventoryData = [];
+    
+    if (materialDetails.length === 0) {
+      console.warn(`[InventoryService] No stored data provided for file ${fileId}`);
+      this.isDataLoaded = false;
+      return;
+    }
+    
+    console.log(`[InventoryService] Sample stored data being loaded:`, {
+      material: materialDetails[0]?.material,
+      materialDescription: materialDetails[0]?.materialDescription?.substring(0, 50) + '...',
+      plant: materialDetails[0]?.plant,
+      unrestricted: materialDetails[0]?.unrestricted,
+      blocked: materialDetails[0]?.blocked
+    });
+    
+    // Convert MaterialDetail back to InventoryItem format for the service
+    this.inventoryData = materialDetails.map(item => ({
+      material: item.material,
+      materialDescription: item.materialDescription,
+      plant: item.plant,
+      storageLocation: item.storageLocation,
+      baseUnitOfMeasure: item.baseUnitOfMeasure,
+      unrestricted: item.unrestricted,
+      stockInTransfer: item.stockInTransfer,
+      inQualityInsp: item.inQualityInsp,
+      restrictedUseStock: item.restrictedUseStock,
+      blocked: item.blocked,
+      valueUnrestricted: item.valueUnrestricted,
+      totalShelfLife: item.totalShelfLife,
+      sled: item.sled,
+      dateOfManufacture: item.dateOfManufacture,
+      batch: item.batch,
+    }));
+
+    this.isDataLoaded = true;
+    console.log(`[InventoryService] Successfully loaded ${this.inventoryData.length} inventory items from storage`);
+    console.log(`[InventoryService] Service state - isDataLoaded: ${this.isDataLoaded}, recordCount: ${this.inventoryData.length}`);
+  }
+
   getInventoryMetrics(filters?: DrillDownFilter): InventoryMetrics {
+    console.log(`Getting metrics - Data loaded: ${this.isDataLoaded}, Records: ${this.inventoryData.length}`);
+    
     if (!this.isDataLoaded || this.inventoryData.length === 0) {
+      console.log('No data available for metrics calculation');
       return {
         totalInventory: 0,
         totalBlocked: 0,

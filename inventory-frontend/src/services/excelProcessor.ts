@@ -99,19 +99,31 @@ class ExcelProcessorService {
 
       let message = 'File uploaded successfully';
 
-      // Auto-activate if file has no errors (is valid)
-      if (validation.isValid) {
-        // Try to use the object format data if available, otherwise use array format
-        const activationData = objectData.length > 0 ? objectData : data;
-        console.log('Using activation data format:', objectData.length > 0 ? 'objects' : 'arrays');
-        
-        await this.activateFile(fileId, activationData);
+      // Always process and save the data to storage, regardless of validation errors
+      // Try to use the object format data if available, otherwise use array format
+      const processingData = objectData.length > 0 ? objectData : data;
+      console.log('Using processing data format:', objectData.length > 0 ? 'objects' : 'arrays');
+      console.log('Processing and saving data to storage for future activation...');
+      
+      // Process the data and save it to storage (but don't activate yet)
+      await inventoryService.setInventoryData(processingData, fileId);
+      
+      // Auto-activate if file has no errors (warnings are OK)
+      const hasErrors = validation.errors.length > 0;
+      if (!hasErrors) {
+        // Since data is already processed and saved, just set the file as active
+        await dataStorage.setActiveFileId(fileId);
         fileMetadata.isActive = true;
-        message += ' and activated';
-        console.log('Auto-activating uploaded file - no validation errors found');
+        
+        // Save the updated file metadata with active status
+        await dataStorage.saveFileMetadata(fileMetadata);
+        
+        const warningCount = validation.warnings.length;
+        message += warningCount > 0 ? ` and activated (${warningCount} warnings)` : ' and activated';
+        console.log(`Auto-activating uploaded file - no errors found (${warningCount} warnings)`);
       } else {
-        console.log('File has validation errors - not auto-activating. User must fix errors and manually activate.');
-        message += ' with validation issues';
+        console.log('File has validation errors - data saved but not auto-activating. User must fix errors and manually activate.');
+        message += ' with validation errors - data saved for later activation';
       }
 
       return {
@@ -540,12 +552,11 @@ class ExcelProcessorService {
   }
 
   async activateFile(fileId: string, data?: any[]): Promise<void> {
-    console.log(`Starting activation of file: ${fileId}`);
+    console.log(`[ExcelProcessor] Starting activation of file: ${fileId}`);
     
-    // Clear all existing inventory data first
-    console.log('Clearing all existing inventory data...');
+    // Clear service state only (not storage data)
+    console.log('[ExcelProcessor] Clearing inventory service state...');
     inventoryService.clearInventoryData();
-    await dataStorage.clearInventoryData(); // Clear from storage too
     
     // Deactivate all existing files
     const allFiles = await dataStorage.getAllFileMetadata();
@@ -573,19 +584,30 @@ class ExcelProcessorService {
       console.log('Processing fresh upload data...');
       await inventoryService.setInventoryData(data, fileId);
     } else {
-      // For existing files, we need to reload the clean Excel data and reprocess it
-      console.log('Reloading data for existing file...');
+      // For existing files, check if data is already saved in processed format
+      console.log(`[ExcelProcessor] Activating existing file: ${fileId}, checking for stored data...`);
       
       // Get the stored processed data
       const storedData = await dataStorage.getInventoryData(fileId);
+      console.log(`[ExcelProcessor] Retrieved data for activation: ${storedData?.length || 0} records`);
+      
       if (storedData && storedData.length > 0) {
-        console.log(`Found ${storedData.length} stored records, reloading...`);
+        console.log(`[ExcelProcessor] Found ${storedData.length} stored processed records, loading directly into inventory service...`);
+        console.log(`[ExcelProcessor] Sample stored data:`, {
+          material: storedData[0]?.material,
+          materialDescription: storedData[0]?.materialDescription?.substring(0, 50) + '...',
+          plant: storedData[0]?.plant,
+          unrestricted: storedData[0]?.unrestricted,
+          blocked: storedData[0]?.blocked
+        });
         
-        // Convert MaterialDetail back to raw Excel format for processing
-        const excelRows = this.convertMaterialDetailsToExcelRows(storedData);
-        await inventoryService.setInventoryData(excelRows, fileId);
+        // Data is already in MaterialDetail format, so load it directly into the service
+        // without re-processing through setInventoryData
+        await inventoryService.loadStoredData(storedData, fileId);
+        console.log(`[ExcelProcessor] Successfully loaded ${storedData.length} records into inventory service`);
       } else {
-        console.warn('No stored data found for file, inventory will be empty');
+        console.warn(`[ExcelProcessor] No stored data found for fileId ${fileId}, inventory will be empty`);
+        console.warn(`[ExcelProcessor] This might indicate data was not properly saved during initial upload`);
         inventoryService.clearInventoryData();
       }
     }

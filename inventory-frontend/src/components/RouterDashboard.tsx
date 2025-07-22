@@ -124,16 +124,77 @@ const RouterDashboard: React.FC = () => {
     setShowFileManagement(false);
   };
 
-  const handleFileUploadSuccess = (fileInfo: any) => {
+  const handleFileUploadSuccess = async (fileInfo: any) => {
     // Reload dashboard data when a new file is uploaded/activated
-    console.log('File upload success, reloading data...', fileInfo);
+    const action = fileInfo.isActivation ? 'activation' : 'upload';
+    console.log(`File ${action} success, reloading data...`, fileInfo);
     setIsReloadingData(true);
-    // Data should already be refreshed by FileManagement, so minimal delay
-    setTimeout(() => {
-      loadData().finally(() => {
-        setIsReloadingData(false);
-      });
-    }, 100);
+    
+    try {
+      // Force a refresh of the inventory service to ensure it has the latest data
+      console.log('Forcing inventory service refresh...');
+      const { inventoryService } = await import('../services/inventoryService');
+      const { inventoryApi } = await import('../services/clientApi');
+      
+      // Add delay to ensure file activation is complete
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // For file activation, force re-initialization of the entire client API
+      if (fileInfo.isActivation) {
+        console.log('File activation detected - forcing full API re-initialization...');
+        await inventoryApi.initialize();
+      }
+      
+      await inventoryService.refreshData();
+      console.log('Inventory service refreshed, now loading dashboard data...');
+      
+      // Retry loading dashboard data with exponential backoff
+      let retryCount = 0;
+      const maxRetries = 3;
+      let success = false;
+      
+      while (retryCount < maxRetries && !success) {
+        try {
+          console.log(`Loading dashboard data (attempt ${retryCount + 1})...`);
+          await loadData();
+          
+          // Verify that we have data
+          const testMetrics = await inventoryApi.getMetrics();
+          console.log('Verification metrics:', {
+            totalInventory: testMetrics.totalInventory,
+            totalBlocked: testMetrics.totalBlocked,
+            totalUnrestricted: testMetrics.totalUnrestricted
+          });
+          
+          if (testMetrics.totalInventory > 0) {
+            console.log('Dashboard data loaded successfully with inventory:', testMetrics.totalInventory);
+            success = true;
+          } else {
+            throw new Error(`No inventory data found after loading (expected records: ${fileInfo.recordCount})`);
+          }
+        } catch (error) {
+          console.warn(`Dashboard data loading attempt ${retryCount + 1} failed:`, error);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const delay = Math.pow(2, retryCount) * 500; // 1s, 2s, 4s delays
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+      
+      if (!success) {
+        console.error('Failed to load dashboard data after all retries');
+        // Still try one final load without verification
+        await loadData();
+      }
+      
+      console.log('Dashboard data refresh complete');
+    } catch (error) {
+      console.error('Error during file upload success handling:', error);
+    } finally {
+      setIsReloadingData(false);
+    }
   };
 
   const handleLocationClick = (data: any) => {

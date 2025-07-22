@@ -112,8 +112,21 @@ class DataStorageService {
 
   // Inventory Data Operations
   async saveInventoryData(fileId: string, data: MaterialDetail[]): Promise<void> {
+    console.log(`[DataStorage] Saving ${data.length} inventory records for fileId: ${fileId}`);
+    
     // Clear existing data for this file first
     await this.clearInventoryData(fileId);
+    
+    if (data.length > 0) {
+      console.log(`[DataStorage] Sample data being saved:`, {
+        material: data[0].material,
+        materialDescription: data[0].materialDescription?.substring(0, 50) + '...',
+        plant: data[0].plant,
+        storageLocation: data[0].storageLocation,
+        unrestricted: data[0].unrestricted,
+        blocked: data[0].blocked
+      });
+    }
 
     // Then add new data in a separate transaction
     const db = await this.ensureDB();
@@ -130,6 +143,7 @@ class DataStorageService {
       }
 
       transaction.oncomplete = () => {
+        console.log(`[DataStorage] Successfully saved ${total} inventory records for fileId: ${fileId}`);
         resolve();
       };
 
@@ -158,6 +172,7 @@ class DataStorageService {
   }
 
   async getInventoryData(fileId?: string): Promise<MaterialDetail[]> {
+    console.log(`[DataStorage] Getting inventory data for fileId: ${fileId}`);
     const db = await this.ensureDB();
     const transaction = db.transaction([STORE_NAMES.INVENTORY], 'readonly');
     const store = transaction.objectStore(STORE_NAMES.INVENTORY);
@@ -168,17 +183,35 @@ class DataStorageService {
       if (fileId) {
         const index = store.index('fileId');
         request = index.getAll(fileId);
+        console.log(`[DataStorage] Querying inventory data by fileId index: ${fileId}`);
       } else {
         request = store.getAll();
+        console.log(`[DataStorage] Querying all inventory data`);
       }
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        console.error(`[DataStorage] Error retrieving inventory data for fileId ${fileId}:`, request.error);
+        reject(request.error);
+      };
       request.onsuccess = () => {
-        const results = request.result.map((item: any) => {
+        const rawResults = request.result;
+        console.log(`[DataStorage] Raw query results for fileId ${fileId}:`, rawResults.length, 'records');
+        
+        if (rawResults.length > 0) {
+          console.log(`[DataStorage] Sample raw record:`, {
+            id: rawResults[0].id,
+            fileId: rawResults[0].fileId,
+            material: rawResults[0].material,
+            materialDescription: rawResults[0].materialDescription?.substring(0, 50) + '...'
+          });
+        }
+        
+        const results = rawResults.map((item: any) => {
           // Remove the internal id and fileId before returning
           const { id, fileId: fId, ...cleanItem } = item;
           return cleanItem as MaterialDetail;
         });
+        console.log(`[DataStorage] Returning ${results.length} cleaned inventory records for fileId: ${fileId}`);
         resolve(results);
       };
     });
@@ -310,7 +343,41 @@ class DataStorageService {
 
     return { inventory, files, settings };
   }
+
+  // Debug method to inspect storage contents
+  async debugStorageContents(): Promise<void> {
+    console.log('=== STORAGE DEBUG ===');
+    
+    // Check all files
+    const allFiles = await this.getAllFileMetadata();
+    console.log('All files in storage:', allFiles.map(f => ({
+      id: f.id,
+      name: f.name,
+      isActive: f.isActive,
+      recordCount: f.recordCount,
+      validationStatus: f.validationStatus
+    })));
+    
+    // Check active file
+    const activeFileId = await this.getActiveFileId();
+    console.log('Active file ID:', activeFileId);
+    
+    // Check inventory data for each file
+    for (const file of allFiles) {
+      const data = await this.getInventoryData(file.id);
+      console.log(`Data for file ${file.name} (${file.id}):`, data.length, 'records');
+    }
+    
+    // Check total inventory data
+    const allData = await this.getInventoryData();
+    console.log('Total inventory records in storage:', allData.length);
+    
+    console.log('=== END STORAGE DEBUG ===');
+  }
 }
 
 // Export singleton instance
 export const dataStorage = new DataStorageService();
+
+// Global debug function for browser console
+(window as any).debugStorage = () => dataStorage.debugStorageContents();
