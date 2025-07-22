@@ -1,6 +1,6 @@
 [build]
   base = "inventory-frontend"
-  publish = "dist"
+  publish = "inventory-frontend/dist"
   command = "npm run build"
 
 [build.environment]
