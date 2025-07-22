@@ -2,252 +2,203 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project: Smart Inventory Hub - Frontend-Only Dashboard
+## Project: Smart Inventory Hub - Frontend-Only Enterprise Dashboard
 
 ### Overview
-Production-ready **frontend-only** inventory management dashboard built with React and TypeScript. Features client-side Excel file processing, IndexedDB storage, interactive analytics, and comprehensive file management - all without requiring a backend server. Includes corporate branding, Pakistani Rupee (PKR) currency formatting, and robust data validation.
+Production-ready **frontend-only** inventory management dashboard built with React and TypeScript. Features client-side Excel file processing, IndexedDB storage, interactive analytics, and comprehensive file management. Runs entirely in the browser with no backend server required. Handles enterprise-scale datasets (~3K inventory items, ~45M total value) with advanced analytics and PKR currency formatting.
 
-### Project Status
-✅ **PRODUCTION READY** - Complete frontend-only architecture with all features functional
+### Architecture - Complete Client-Side Processing
 
-### Architecture - Client-Side Only
-- **Frontend**: React 18 + TypeScript with Vite build system
-- **Storage**: Browser IndexedDB for persistent data storage (no server required)
-- **Processing**: Client-side Excel parsing with xlsx library
-- **Charts**: Recharts for interactive data visualization
-- **Routing**: React Router with themed navigation
-- **Deployment**: Static hosting only (Vercel, Netlify, GitHub Pages)
+```
+Excel Upload → excelProcessor.ts → dataStorage.ts (IndexedDB) → inventoryService.ts → Dashboard Analytics
+```
 
-### Key Commands
+- **Frontend**: React 19 + TypeScript with Vite 7.0.4 build system
+- **Storage**: Browser IndexedDB with custom service wrapper (~250MB capacity)
+- **Processing**: Client-side Excel parsing with comprehensive validation
+- **Analytics**: Real-time metrics, location/plant statistics, drill-down navigation
+- **Deployment**: Static hosting only (Netlify/Vercel/GitHub Pages compatible)
 
-#### Development Setup
+## Key Commands
+
+### Development (run from `inventory-frontend/`)
 ```bash
-# Frontend-only development
-cd inventory-frontend
-npm install
-npm run dev               # Runs on http://localhost:5173
+npm install                  # Install dependencies
+npm run dev                  # Development server (localhost:5173)
+npm run build                # Production build with optimization
+npm run preview              # Preview production build
+npm run lint                 # ESLint checking
 ```
 
-#### Development Commands (inventory-frontend/)
+### Testing Infrastructure
 ```bash
-npm run dev               # Development server  
-npm run build             # Production build
-npm run preview           # Preview production build
-npm run lint              # ESLint checking
+npm test                     # Run tests in watch mode
+npm run test:run             # Run tests once
+npm run test:ui              # Interactive test UI dashboard
+npm run test:coverage        # Generate coverage report (75% target)
+npm run test:watch           # Watch mode with file monitoring
+
+# Run specific tests
+npm run test:run src/services/dataStorage.test.ts
+npm run test:run -- --reporter=verbose
 ```
 
-#### Deployment
+### Build & Deployment
 ```bash
-npm run build             # Creates dist/ folder for deployment
-# Deploy dist/ folder to any static hosting service
+npm run build                # Generates dist/ folder for static hosting
+npm run preview              # Test production build locally
+
+# Netlify deployment ready - includes netlify.toml config
+# Supports any static hosting: Vercel, GitHub Pages, CDN
 ```
 
-#### Debug Tools
-```javascript
-// Browser console commands:
-debugStorage()            # Inspect IndexedDB storage contents
+## Core Service Architecture
+
+### Service Layer (`src/services/`)
+1. **`dataStorage.ts`** (383 lines) - IndexedDB wrapper and schema manager
+   - Multi-store database: inventory, files, settings
+   - File metadata with validation status tracking
+   - Active file management and persistence
+   - Debug utilities: `debugStorage()` in browser console
+
+2. **`inventoryService.ts`** (681 lines) - Business logic engine
+   - Excel data processing (object/array formats)
+   - Metrics calculations: KPIs, location stats, plant analytics
+   - Advanced filtering with drill-down functionality
+   - Pagination with configurable page sizes (10, 20, 50, 100)
+   - Search with 300ms debouncing for performance
+
+3. **`excelProcessor.ts`** (792 lines) - File processing pipeline
+   - File validation: type (.xlsx/.xls), size (10MB max), structure
+   - Comprehensive Excel validation with error/warning reporting
+   - Template generation and download
+   - File lifecycle: upload → validate → process → activate → delete
+
+4. **`clientApi.ts`** - API abstraction layer
+   - Drop-in replacement for backend API interface
+   - Service orchestration and initialization
+   - Error handling and state management
+
+### Component Architecture Patterns
+- **Interactive KPI Cards**: Clickable metrics with drill-down navigation
+- **Dynamic Charts**: Recharts integration with click handlers for navigation
+- **Advanced File Management**: Drag-and-drop upload with real-time validation
+- **Specialized Analytics Views**: 15+ dedicated views for different data perspectives
+- **Responsive Design**: Mobile-first with corporate branding and PKR formatting
+
+## Data Processing Capabilities
+
+### IndexedDB Schema
+```
+InventoryHub Database (v1)
+├── inventory (store) - Material records with indexes
+│   ├── material, plant, storageLocation, status, fileId (indexes)
+├── files (store) - File metadata and upload history  
+├── settings (store) - Active file tracking and app configuration
 ```
 
-### Client-Side Data Operations
-All operations happen locally in browser through client services:
-
-- **Metrics Calculation** - KPI statistics (Total, Blocked, Unrestricted, Restricted)
-- **Location Analytics** - Storage location analytics and drill-downs
-- **Plant Analytics** - Plant distribution analytics and drill-downs  
-- **Material Management** - Paginated material listings with search/filter
-- **File Management** - Upload, validate, activate, and delete Excel files
-- **Template Generation** - Download Excel template with sample data
-
-### Dashboard Features
-- **Interactive KPI Cards**: Clickable metrics for drill-down navigation
-- **Charts**: Bar charts (locations), pie charts (plants) with click interactions
-- **Advanced Filtering**: Real-time search, status filters, plant/location filters
-- **Pagination**: Configurable page sizes (10, 20, 50, 100 items)
-- **Drill-down Navigation**: Click any chart or KPI to view detailed materials
-- **Responsive Design**: Desktop, tablet, and mobile support
-- **Risk Analysis**: Categorized blocked stock by risk levels
-
-### Data Processing
-- **Source**: `blocked_stock.XLSX` (2,887 inventory items)
-- **Analytics**: ~44.67M total inventory, ~771K blocked units
-- **Top Plants**: Y012 (21M units), Y013 (1.17M units)
-- **Top Locations**: YP01 (18.5M units), YM99 (1.36M units)
-- **Processing**: In-memory data processing for fast API responses
-
-### Code Architecture - Frontend Only
-
-#### Core Service Layer (`inventory-frontend/src/services/`)
-- **dataStorage.ts** (383 lines) - IndexedDB wrapper with schema management
-- **inventoryService.ts** (681 lines) - Main business logic and data processing engine
-- **excelProcessor.ts** (792 lines) - File upload, validation, and Excel processing
-- **clientApi.ts** - Drop-in API replacement for frontend-only operations
-- **init.ts** - Application initialization and service bootstrapping
-
-#### Component Architecture (`inventory-frontend/src/components/`)
-**Core Application:**
-- **AppRouter.tsx** - Application routing logic
-- **RouterDashboard.tsx** - Main dashboard with router integration
-- **FileManagement.tsx** - File upload/management interface
-- **CompleteDashboard.tsx** - Legacy dashboard view
-- **MaterialDetails.tsx** - Material listings with search/filters
-
-**Analytics Views:**
-- **LocationsListView.tsx** - Location analytics and drill-downs
-- **PlantsListView.tsx** - Plant analytics and drill-downs  
-- **MaterialsSummaryView.tsx** - Blocked materials analysis
-- **RestrictedMaterialsView.tsx** - Restricted stock analysis
-- **DataRequirementsView.tsx** - Excel format documentation
-- **[12+ additional specialized analytics views]**
-
-**Utility Components:**
-- **KpiCard.tsx** - Reusable metric cards with drill-down
-- **ThemeToggle.tsx** - Dark/light theme switching
-- **ScrollToTop.tsx** - Navigation helper
-
-#### Data Flow Architecture
-```
-Excel Upload → excelProcessor.ts → dataStorage.ts (IndexedDB) 
-             ↓
-Router Dashboard → inventoryService.ts → clientApi.ts → Analytics Views
-```
-
-### IndexedDB Storage Schema
-**Database:** `InventoryHub` (version 1)
-**Object Stores:**
-- **inventory** - Material records with indexes (material, plant, storageLocation, status, fileId)
-- **files** - File metadata and upload history
-- **settings** - App configuration and active file tracking
-
-### Browser Requirements
-- **Storage**: IndexedDB support required (~250MB limit per domain)
-- **Processing**: Client-side XLSX parsing capability
-- **Memory**: Handles large datasets (2000+ inventory items) in memory
-- **Offline**: Fully functional offline after initial load
-
-### Development Practices
-- **Type Safety**: Full TypeScript with strict configuration
-- **Code Quality**: ESLint flat configuration with React hooks
-- **Error Handling**: Comprehensive validation and user feedback
-- **Performance**: Debounced search (300ms), efficient data filtering
-- **Build**: TypeScript project references with manual chunk splitting
-
-### Important Implementation Details
-- **Excel Processing**: Client-side using `xlsx` library in `excelProcessor.ts`
-- **Charts**: Recharts for all interactive data visualizations
-- **Search**: Debounced for performance with real-time filtering
-- **Navigation**: Drill-down interactions with router state management
-- **Theming**: Dark/light mode with theme context
-- **Responsive**: Desktop, tablet, mobile breakpoints
-- **File Templates**: Generated client-side with sample data
-- **Data Persistence**: All data stored in browser IndexedDB
-- **Build Output**: Static files for deployment to any CDN/hosting
-
-### File Management - Client-Side
-**File Upload & Processing:**
-- **Upload Interface**: Drag-and-drop with real-time validation
-- **File Types**: .xlsx, .xls (10MB max size)
+### Excel Processing Pipeline
+- **Supported Formats**: .xlsx, .xls files up to 10MB
 - **Required Columns**: Material, Description, Plant, Storage Location, Unrestricted Stock, Blocked Stock
-- **Validation**: Comprehensive error/warning reporting with detailed feedback
-- **Processing**: Client-side Excel parsing with automatic data conversion
+- **Validation**: Real-time structure validation with detailed error reporting
+- **Processing**: Automatic data type conversion and status categorization
+- **Performance**: Handles 3K+ items with in-memory processing for fast analytics
 
-**Template Generation:**
-- **Template Creation**: Generated client-side using XLSX library
-- **Sample Data**: Includes properly formatted example rows
-- **Download**: Direct browser download (no server required)
+### Analytics Capabilities
+- **Metrics**: Total inventory, blocked/unrestricted/restricted stock values
+- **Location Analytics**: Storage location distribution and drill-downs
+- **Plant Analytics**: Plant-wise inventory distribution and performance
+- **Material Management**: Paginated listings with search and status filtering
+- **Status Categories**: Blocked, unrestricted, restricted, in-transfer, quality-inspection
 
-**File History:**
-- **Storage**: All metadata stored in IndexedDB
-- **Tracking**: Upload timestamps, validation status, record counts
-- **Management**: Activate/deactivate files, deletion with cleanup
-
-### Key Dependencies
-- **Core**: React 18, TypeScript, Vite
-- **Data**: xlsx (Excel processing), Recharts (charts)
-- **Storage**: IndexedDB (built-in browser API)
-- **Routing**: React Router
-- **Styling**: CSS Modules, React Icons
-- **Development**: ESLint, TypeScript compiler
-
-### Debugging Tools
-**Browser Console Commands:**
-```javascript
-debugStorage()                    # Inspect IndexedDB contents
-inventoryService.isDataLoaded_()  # Check service data state
-inventoryService.getDataCount()   # Get loaded record count
-```
-
-**Service State Monitoring:**
-- Monitor `[DataStorage]` logs for IndexedDB operations
-- Check `[InventoryService]` logs for data processing
-- Watch `[ExcelProcessor]` logs for file validation
-- Review activation sequence logs during file switching
-
-### Build Configuration
-- **Vite Config**: Manual chunk splitting (vendor, charts, excel libraries)
-- **TypeScript**: Project references with strict type checking
-- **Target**: ES2015 for broad browser compatibility
-- **Output**: Static files for deployment to any hosting service
-- **Assets**: All resources bundled for offline capability
-
-### Common Development Workflows
-**New Feature Development:**
-1. Implement in appropriate service layer (`services/`)
-2. Add TypeScript interfaces in `types/`
-3. Create or update React components
-4. Test with browser debug tools
-5. Run `npm run lint` and `npm run build`
-
-**File Processing Issues:**
-1. Check browser console for `[ExcelProcessor]` logs
-2. Use `debugStorage()` to inspect IndexedDB state
-3. Verify file activation sequence in `[InventoryService]` logs
-4. Test with template file for validation baseline
-
-## Testing Infrastructure
-
-### Test Framework
-- **Vitest**: Modern test runner with Vite integration
-- **React Testing Library**: Component testing with user-centric approach
-- **V8 Coverage**: Accurate code coverage reporting
-- **Fake IndexedDB**: Browser storage mocking for tests
-
-### Test Commands
-```bash
-cd inventory-frontend
-
-npm test                  # Run all tests in watch mode
-npm run test:run          # Run tests once
-npm run test:ui           # Run tests with UI dashboard
-npm run test:coverage     # Generate coverage report
-npm run test:watch        # Run tests in watch mode
-```
-
-### Test Structure
-```
-src/
-├── services/
-│   ├── dataStorage.test.ts        # Storage layer tests (95% coverage)
-│   ├── inventoryService.test.ts   # Business logic tests (90% coverage)
-│   └── excelProcessor.test.ts     # File processing tests (85% coverage)
-├── components/
-│   ├── KpiCard.test.tsx           # Component rendering tests
-│   ├── ThemeToggle.test.tsx       # Theme switching tests
-│   └── FileManagement.test.tsx    # File upload UI tests
-└── test/
-    ├── integration/
-    │   └── fileUploadWorkflow.test.ts # End-to-end workflow tests
-    └── utils/
-        └── testUtils.tsx          # Testing utilities and helpers
-```
-
-### Coverage Targets
-- **Services**: 80%+ coverage (critical business logic)
-- **Components**: 70%+ coverage (user interface)
-- **Integration**: Complete workflow coverage
-- **Overall**: 80%+ lines, branches, functions, statements
+## Testing Infrastructure (130+ Test Cases)
 
 ### Test Categories
-1. **Unit Tests**: Individual function and method testing
-2. **Component Tests**: React component rendering and interaction
-3. **Integration Tests**: Complete file upload and processing workflows
-4. **Mock Tests**: Service dependencies and browser API mocking
+- **Unit Tests**: Core services (dataStorage, inventoryService, excelProcessor)
+- **Component Tests**: React components with user interaction testing
+- **Integration Tests**: Complete file upload and processing workflows
+- **Coverage**: 75% minimum across lines, branches, functions, statements
+
+### Test Utilities
+- **Mock Data Generators**: Consistent test data creation
+- **Browser API Mocking**: IndexedDB, File APIs, URL methods
+- **Custom Render**: React Testing Library with all providers
+- **Performance Testing**: Async operation and large dataset handling
+
+## Development Workflows
+
+### File Processing Development
+1. **Service Testing**: Use individual service tests for logic validation
+2. **Integration Testing**: Full workflow tests for end-to-end verification
+3. **Browser Debug**: Use `debugStorage()` for IndexedDB inspection
+4. **Error Handling**: Test validation scenarios with various Excel formats
+
+### UI Component Development
+1. **Component Tests**: React Testing Library for user interaction
+2. **Theme Integration**: Test with ThemeProvider for dark/light modes
+3. **Responsive Testing**: Verify mobile, tablet, desktop layouts
+4. **Accessibility**: ARIA labels, keyboard navigation, screen reader compatibility
+
+### Performance Optimization
+- **Debounced Search**: 300ms delay for search input
+- **Pagination**: Configurable page sizes for large datasets
+- **Lazy Loading**: Chart components load on demand
+- **Memory Management**: Proper cleanup in useEffect hooks
+
+## Browser Requirements & Limitations
+
+- **IndexedDB Support**: Required for data persistence (~250MB typical limit)
+- **ES2015+ Browser**: Modern JavaScript features required
+- **File API Support**: For Excel upload and processing
+- **Offline Capability**: Full functionality after initial load
+- **Memory**: Large datasets (3K+ items) processed in browser memory
+
+## Debugging Tools
+
+### Browser Console
+```javascript
+debugStorage()                    # Inspect IndexedDB contents and structure
+inventoryService.isDataLoaded_()  # Check if service has data loaded
+inventoryService.getDataCount()   # Get current loaded record count
+```
+
+### Service Monitoring
+- Monitor `[DataStorage]` logs for IndexedDB operations
+- Check `[InventoryService]` logs for data processing and metrics
+- Watch `[ExcelProcessor]` logs for file validation and processing
+- Review activation sequence logs during file switching
+
+## Build Configuration & Deployment
+
+### Vite Configuration
+- **Manual Chunk Splitting**: vendor, charts, excel libraries separated
+- **Asset Optimization**: CSS/JS minification and compression
+- **TypeScript Integration**: Strict type checking with project references
+- **Static Output**: All resources bundled for offline capability
+
+### Deployment Options
+- **Netlify**: Includes netlify.toml with build configuration
+- **Vercel**: Compatible with automatic deployment from Git
+- **GitHub Pages**: Static site hosting from dist/ folder
+- **Any CDN**: Standard static file hosting
+
+### Performance Characteristics
+- **Bundle Size**: ~1.26 MB total (compressed: ~357 KB)
+- **Load Time**: Fast initial load with code splitting
+- **Processing**: Real-time Excel validation and processing
+- **Storage**: Persistent data across browser sessions
+- **Analytics**: Sub-second response times for large datasets
+
+## Common Issues & Solutions
+
+### File Processing Issues
+1. Check browser console for `[ExcelProcessor]` validation logs
+2. Use `debugStorage()` to inspect saved data
+3. Verify required columns match template format
+4. Test with provided template files in `examples/` directory
+
+### Performance Issues
+1. Monitor memory usage with large Excel files (>1MB)
+2. Use pagination for datasets >1000 items
+3. Clear browser cache if IndexedDB becomes corrupted
+4. Check Network tab for asset loading issues in production
