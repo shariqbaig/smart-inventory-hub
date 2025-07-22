@@ -202,3 +202,52 @@ inventoryService.getDataCount()   # Get loaded record count
 2. Use `debugStorage()` to inspect IndexedDB state
 3. Verify file activation sequence in `[InventoryService]` logs
 4. Test with template file for validation baseline
+
+## Testing Infrastructure
+
+### Test Framework
+- **Vitest**: Modern test runner with Vite integration
+- **React Testing Library**: Component testing with user-centric approach
+- **V8 Coverage**: Accurate code coverage reporting
+- **Fake IndexedDB**: Browser storage mocking for tests
+
+### Test Commands
+```bash
+cd inventory-frontend
+
+npm test                  # Run all tests in watch mode
+npm run test:run          # Run tests once
+npm run test:ui           # Run tests with UI dashboard
+npm run test:coverage     # Generate coverage report
+npm run test:watch        # Run tests in watch mode
+```
+
+### Test Structure
+```
+src/
+├── services/
+│   ├── dataStorage.test.ts        # Storage layer tests (95% coverage)
+│   ├── inventoryService.test.ts   # Business logic tests (90% coverage)
+│   └── excelProcessor.test.ts     # File processing tests (85% coverage)
+├── components/
+│   ├── KpiCard.test.tsx           # Component rendering tests
+│   ├── ThemeToggle.test.tsx       # Theme switching tests
+│   └── FileManagement.test.tsx    # File upload UI tests
+└── test/
+    ├── integration/
+    │   └── fileUploadWorkflow.test.ts # End-to-end workflow tests
+    └── utils/
+        └── testUtils.tsx          # Testing utilities and helpers
+```
+
+### Coverage Targets
+- **Services**: 80%+ coverage (critical business logic)
+- **Components**: 70%+ coverage (user interface)
+- **Integration**: Complete workflow coverage
+- **Overall**: 80%+ lines, branches, functions, statements
+
+### Test Categories
+1. **Unit Tests**: Individual function and method testing
+2. **Component Tests**: React component rendering and interaction
+3. **Integration Tests**: Complete file upload and processing workflows
+4. **Mock Tests**: Service dependencies and browser API mocking
