@@ -1635,9 +1635,6 @@
   font-size: 1rem;
 }
 
-.filename-text {
-  flex: 1;
-}
 
 .validation-badge {
   padding: 0.125rem 0.5rem;
