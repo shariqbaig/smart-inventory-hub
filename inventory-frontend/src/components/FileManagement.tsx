@@ -321,13 +321,21 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
   };
 
 
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
   const getValidationStatusBadge = (status: string) => {
     const badges = {
-      'valid': <span className="badge badge-success">Valid</span>,
-      'warning': <span className="badge badge-warning">Warnings</span>,
-      'invalid': <span className="badge badge-error">Errors</span>
+      'valid': <span className="validation-status valid">Valid</span>,
+      'warning': <span className="validation-status warning">Warnings</span>,
+      'invalid': <span className="validation-status invalid">Invalid</span>
     };
-    return badges[status as keyof typeof badges] || <span className="badge badge-neutral">Unknown</span>;
+    return badges[status as keyof typeof badges] || <span className="validation-status unknown">Unknown</span>;
   };
 
   return (
@@ -1003,21 +1011,19 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                     <div key={file.id} className={`file-item ${file.isActive ? 'active' : ''}`}>
                       <div className="file-info">
                         <div className="file-name">
-                          {file.name}
-                          {file.isActive && file.validationStatus !== 'invalid' && <span className="active-badge"> Active</span>}
-                          {file.isActive && file.validationStatus === 'invalid' && <span className="error-badge"> Error</span>}
+                          <span className="filename-text">{file.name}</span>
+                          {file.isActive && file.validationStatus !== 'invalid' && <span className="active-badge">Active</span>}
+                          {file.isActive && file.validationStatus === 'invalid' && <span className="error-badge">Error</span>}
                         </div>
                         <div className="file-details">
-                          <div className="file-meta-row">
-                            <span className="upload-date">Uploaded: {new Date(file.uploadDate).toLocaleString()}</span>
+                          <div className="file-compact-info">
+                            <span className="upload-time">{formatDate(new Date(file.uploadDate))}</span>
                             <span className="record-count">{file.recordCount.toLocaleString()} records</span>
-                          </div>
-                          <div className="file-status-row">
                             {getValidationStatusBadge(file.validationStatus)}
-                            {file.errorCount && file.errorCount > 0 && (
+                            {file.errorCount > 0 && (
                               <span className="error-count">{file.errorCount} errors</span>
                             )}
-                            {file.warningCount && file.warningCount > 0 && (
+                            {file.warningCount > 0 && (
                               <span className="warning-count">{file.warningCount} warnings</span>
                             )}
                           </div>
