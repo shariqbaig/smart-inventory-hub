@@ -1004,17 +1004,18 @@ const FileManagement: React.FC<FileManagementProps> = ({ onUploadSuccess, onClos
                       <div className="file-info">
                         <div className="file-name">
                           {file.name}
-                          {file.isActive && <span className="active-badge">Active</span>}
+                          {file.isActive && file.validationStatus !== 'invalid' && <span className="active-badge"> Active</span>}
+                          {file.isActive && file.validationStatus === 'invalid' && <span className="error-badge"> Error</span>}
                         </div>
                         <div className="file-details">
                           <span>Uploaded: {new Date(file.uploadDate).toLocaleString()}</span>
-                          <span>{file.recordCount} records</span>
+                          <span> • {file.recordCount} records</span>
                           {getValidationStatusBadge(file.validationStatus)}
                           {file.errorCount && file.errorCount > 0 && (
-                            <span className="error-count">{file.errorCount} errors</span>
+                            <span className="error-count"> • {file.errorCount} errors</span>
                           )}
                           {file.warningCount && file.warningCount > 0 && (
-                            <span className="warning-count">{file.warningCount} warnings</span>
+                            <span className="warning-count"> • {file.warningCount} warnings</span>
                           )}
                         </div>
                       </div>
