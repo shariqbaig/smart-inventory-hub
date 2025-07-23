@@ -259,9 +259,9 @@ describe('FileManagement', () => {
       await user.click(screen.getByText(/History/))
       
       await waitFor(() => {
-        expect(screen.getByText('• 1500 records')).toBeInTheDocument()
-        expect(screen.getByText('• 1200 records')).toBeInTheDocument()
-        expect(screen.getByText('• 800 records')).toBeInTheDocument()
+        expect(screen.getByText('1,500 records')).toBeInTheDocument()
+        expect(screen.getByText('1,200 records')).toBeInTheDocument()
+        expect(screen.getByText('800 records')).toBeInTheDocument()
       })
     })
 
