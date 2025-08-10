@@ -42,45 +42,75 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
   const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
   const [total, setTotal] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(parseInt(searchParams.get('limit') || '20'));
+  
+  // Flag to prevent URL updates during initial state loading
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Flag to track if we're in the middle of a page change
+  const isChangingPage = useRef(false);
 
-  // Update filters based on URL parameters
+  // Update filters based on URL parameters - avoid filters dependency
   useEffect(() => {
-    const newFilters = { ...filters };
-    
-    if (params.plantId) {
-      newFilters.plant = decodeURIComponent(params.plantId);
-    }
-    if (params.locationId) {
-      newFilters.storageLocation = decodeURIComponent(params.locationId);
+    // Skip state updates if we're in the middle of a page change to prevent flicker
+    if (isChangingPage.current) {
+      isChangingPage.current = false; // Reset flag
+      return;
     }
     
-    // Update filters state
-    setSearchTerm(searchParams.get('search') || '');
-    setStatusFilter(searchParams.get('status') || filters.status || 'all');
-    setPlantFilter(searchParams.get('plant') || newFilters.plant || 'all');
-    setLocationFilter(searchParams.get('location') || newFilters.storageLocation || 'all');
-    setCurrentPage(parseInt(searchParams.get('page') || '1'));
-    setItemsPerPage(parseInt(searchParams.get('limit') || '20'));
-  }, [params, searchParams, filters]);
+    // Get plant/location from URL path parameters
+    const pathPlant = params.plantId ? decodeURIComponent(params.plantId) : null;
+    const pathLocation = params.locationId ? decodeURIComponent(params.locationId) : null;
+    
+    // Update state from URL search parameters, with path params taking precedence
+    const newSearchTerm = searchParams.get('search') || '';
+    const newStatusFilter = searchParams.get('status') || 'all';
+    const newPlantFilter = searchParams.get('plant') || pathPlant || 'all';
+    const newLocationFilter = searchParams.get('location') || pathLocation || 'all';
+    const newCurrentPage = parseInt(searchParams.get('page') || '1');
+    const newItemsPerPage = parseInt(searchParams.get('limit') || '20');
+    
+    // Only update state if values actually changed to prevent loops
+    if (searchTerm !== newSearchTerm) setSearchTerm(newSearchTerm);
+    if (statusFilter !== newStatusFilter) setStatusFilter(newStatusFilter);
+    if (plantFilter !== newPlantFilter) setPlantFilter(newPlantFilter);
+    if (locationFilter !== newLocationFilter) setLocationFilter(newLocationFilter);
+    if (currentPage !== newCurrentPage) setCurrentPage(newCurrentPage);
+    if (itemsPerPage !== newItemsPerPage) setItemsPerPage(newItemsPerPage);
+    
+    // Mark as initialized after first load
+    if (!isInitialized) {
+      setIsInitialized(true);
+    }
+  }, [params.plantId, params.locationId, searchParams]);
 
-  // Consolidated effect for URL parameter updates (non-reactive)
+  // URL parameter updates - only after initialization to prevent loops
   useEffect(() => {
-    const newSearchParams = new URLSearchParams();
-    
-    if (searchTerm) newSearchParams.set('search', searchTerm);
-    if (statusFilter !== 'all') newSearchParams.set('status', statusFilter);
-    if (plantFilter !== 'all') newSearchParams.set('plant', plantFilter);
-    if (locationFilter !== 'all') newSearchParams.set('location', locationFilter);
-    if (currentPage > 1) newSearchParams.set('page', currentPage.toString());
-    if (itemsPerPage !== 20) newSearchParams.set('limit', itemsPerPage.toString());
-    
-    // Only update if different to avoid unnecessary re-renders
-    const currentSearch = searchParams.toString();
-    const newSearch = newSearchParams.toString();
-    if (currentSearch !== newSearch) {
-      setSearchParams(newSearchParams, { replace: true });
+    // Skip URL updates during initial load
+    if (!isInitialized) {
+      return;
     }
-  }, [searchTerm, statusFilter, plantFilter, locationFilter, currentPage, itemsPerPage]);
+    
+    const timeoutId = setTimeout(() => {
+      const newSearchParams = new URLSearchParams();
+      
+      if (searchTerm) newSearchParams.set('search', searchTerm);
+      if (statusFilter !== 'all') newSearchParams.set('status', statusFilter);
+      if (plantFilter !== 'all') newSearchParams.set('plant', plantFilter);
+      if (locationFilter !== 'all') newSearchParams.set('location', locationFilter);
+      if (currentPage > 1) newSearchParams.set('page', currentPage.toString());
+      if (itemsPerPage !== 20) newSearchParams.set('limit', itemsPerPage.toString());
+      
+      // Only update if different to avoid unnecessary re-renders
+      const currentSearch = searchParams.toString();
+      const newSearch = newSearchParams.toString();
+      
+      if (currentSearch !== newSearch) {
+        setSearchParams(newSearchParams, { replace: true });
+      }
+    }, 50); // Small delay to debounce URL updates
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, statusFilter, plantFilter, locationFilter, currentPage, itemsPerPage, isInitialized]);
 
   // Single effect for data loading - handles all scenarios
   useEffect(() => {
@@ -249,6 +279,7 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
 
   const goToPage = (page: number) => {
     if (page !== currentPage && page >= 1 && page <= totalPages) {
+      isChangingPage.current = true;
       setCurrentPage(page);
     }
   };
@@ -522,7 +553,7 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
         <div className="pagination">
           <div className="pagination-controls">
             <button
-              onClick={() => setCurrentPage(1)}
+              onClick={() => goToPage(1)}
               disabled={currentPage === 1}
               className="pagination-button"
               title="First page"
@@ -530,7 +561,7 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
               ««
             </button>
             <button
-              onClick={() => setCurrentPage(currentPage - 1)}
+              onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
               className="pagination-button"
               title="Previous page"
@@ -543,7 +574,7 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
             </div>
             
             <button
-              onClick={() => setCurrentPage(currentPage + 1)}
+              onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
               className="pagination-button"
               title="Next page"
@@ -551,7 +582,7 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
               ›
             </button>
             <button
-              onClick={() => setCurrentPage(totalPages)}
+              onClick={() => goToPage(totalPages)}
               disabled={currentPage === totalPages}
               className="pagination-button"
               title="Last page"
