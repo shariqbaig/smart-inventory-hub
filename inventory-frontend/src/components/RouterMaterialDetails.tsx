@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { MaterialDetail } from '../types';
 import { inventoryApi } from '../services/clientApi';
@@ -63,7 +63,7 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
     setItemsPerPage(parseInt(searchParams.get('limit') || '20'));
   }, [params, searchParams, filters]);
 
-  // Update URL when filters change
+  // Consolidated effect for URL parameter updates (non-reactive)
   useEffect(() => {
     const newSearchParams = new URLSearchParams();
     
@@ -74,33 +74,34 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
     if (currentPage > 1) newSearchParams.set('page', currentPage.toString());
     if (itemsPerPage !== 20) newSearchParams.set('limit', itemsPerPage.toString());
     
-    setSearchParams(newSearchParams);
-  }, [searchTerm, statusFilter, plantFilter, locationFilter, currentPage, itemsPerPage, setSearchParams]);
-
-  // Separate effect for initial load and URL param changes
-  useEffect(() => {
-    loadMaterials('initial');
-  }, [params.plantId, params.locationId]);
-
-  // Effect for filter changes (non-search) - only when page is 1
-  useEffect(() => {
-    if (currentPage === 1) {
-      loadMaterials('filter');
+    // Only update if different to avoid unnecessary re-renders
+    const currentSearch = searchParams.toString();
+    const newSearch = newSearchParams.toString();
+    if (currentSearch !== newSearch) {
+      setSearchParams(newSearchParams, { replace: true });
     }
-  }, [currentPage, statusFilter, itemsPerPage, plantFilter, locationFilter]);
-  
-  // Effect for pagination changes when page > 1
-  useEffect(() => {
-    if (currentPage > 1) {
-      loadMaterials('pagination');
-    }
-  }, [currentPage]);
+  }, [searchTerm, statusFilter, plantFilter, locationFilter, currentPage, itemsPerPage]);
 
-  // Effect for search with debounce
+  // Single effect for data loading - handles all scenarios
+  useEffect(() => {
+    let loadType: 'initial' | 'filter' | 'search' | 'pagination' = 'initial';
+    
+    // Determine load type based on what changed
+    if (params.plantId || params.locationId) {
+      loadType = 'initial';
+    } else {
+      loadType = 'filter';
+    }
+    
+    loadMaterials(loadType);
+  }, [params.plantId, params.locationId, currentPage, statusFilter, itemsPerPage, plantFilter, locationFilter]);
+
+  // Separate effect for search with debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {
+      // Reset to page 1 if searching and not already on page 1
       if (currentPage !== 1) {
-        setCurrentPage(1);
+        setCurrentPage(1); // This will trigger the main effect above
       } else {
         loadMaterials('search');
       }
@@ -109,17 +110,34 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // Reset page when filters change
+  // Reset page to 1 when filters change (but not when page itself changes)
+  const prevFilters = useRef({ statusFilter, plantFilter, locationFilter, itemsPerPage });
   useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, plantFilter, locationFilter, itemsPerPage]);
+    const prev = prevFilters.current;
+    const filtersChanged = prev.statusFilter !== statusFilter || 
+                          prev.plantFilter !== plantFilter || 
+                          prev.locationFilter !== locationFilter || 
+                          prev.itemsPerPage !== itemsPerPage;
+    
+    if (filtersChanged && currentPage !== 1) {
+      setCurrentPage(1);
+    }
+    
+    // Update ref
+    prevFilters.current = { statusFilter, plantFilter, locationFilter, itemsPerPage };
+  }, [statusFilter, plantFilter, locationFilter, itemsPerPage, currentPage]);
 
+  // Add loading state management
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  
   const loadMaterials = async (loadType: 'initial' | 'filter' | 'search' | 'pagination' = 'initial') => {
     try {
-      // Prevent loading if already loading (except for initial load)
-      if (loading && loadType !== 'initial') {
+      // Prevent multiple simultaneous loads
+      if (isLoadingData && loadType !== 'initial') {
         return;
       }
+      
+      setIsLoadingData(true);
       
       if (loadType === 'initial') {
         setLoading(true);
@@ -175,6 +193,7 @@ const RouterMaterialDetails: React.FC<RouterMaterialDetailsProps> = ({
       setError('Failed to load materials');
     } finally {
       setLoading(false);
+      setIsLoadingData(false);
     }
   };
 
