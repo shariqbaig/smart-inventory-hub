@@ -502,7 +502,7 @@ const RouterDashboard: React.FC = () => {
               <div className="metric-content">
                 <h3 className="metric-label">Blocked Stock</h3>
                 <div className="metric-values">
-                  <span className="metric-primary">{(metrics.totalBlocked / 1000).toFixed(0)}K</span>
+                  <span className="metric-primary">{(metrics.totalBlocked / 1000).toFixed(2)}K</span>
                   <span className="metric-unit">units</span>
                 </div>
                 <div className="metric-secondary">
@@ -520,7 +520,7 @@ const RouterDashboard: React.FC = () => {
             <div className="metric-small-icon">⚠️</div>
             <div className="metric-small-content">
               <span className="metric-small-label">Restricted Stock</span>
-              <span className="metric-small-value">{(metrics.totalRestricted / 1000).toFixed(1)}K units</span>
+              <span className="metric-small-value">{(metrics.totalRestricted / 1000).toFixed(2)}K units</span>
               <span className="metric-small-currency">₨{(metrics.totalRestrictedValue / 1000).toFixed(1)}K</span>
             </div>
           </div>
@@ -529,7 +529,7 @@ const RouterDashboard: React.FC = () => {
             <div className="metric-small-icon">🔄</div>
             <div className="metric-small-content">
               <span className="metric-small-label">In Transfer</span>
-              <span className="metric-small-value">{(metrics.totalInTransfer / 1000).toFixed(1)}K units</span>
+              <span className="metric-small-value">{(metrics.totalInTransfer / 1000).toFixed(2)}K units</span>
               <span className="metric-small-currency">₨{(metrics.totalInTransferValue / 1000).toFixed(1)}K</span>
             </div>
           </div>
@@ -538,7 +538,7 @@ const RouterDashboard: React.FC = () => {
             <div className="metric-small-icon">🔍</div>
             <div className="metric-small-content">
               <span className="metric-small-label">Quality Inspection</span>
-              <span className="metric-small-value">{(metrics.totalInQualityInsp / 1000).toFixed(1)}K units</span>
+              <span className="metric-small-value">{(metrics.totalInQualityInsp / 1000).toFixed(2)}K units</span>
               <span className="metric-small-currency">₨{(metrics.totalInQualityInspValue / 1000).toFixed(1)}K</span>
             </div>
           </div>

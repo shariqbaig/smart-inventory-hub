@@ -146,6 +146,36 @@ class InventoryService {
         return foundKey ? row[foundKey] : defaultValue;
       };
 
+      // More specific helper for restricted stock to avoid unrestricted match
+      const findRestrictedValue = () => {
+        const keys = Object.keys(row);
+        
+        // Debug: log all keys containing "restrict"
+        const restrictKeys = keys.filter(key => key.toLowerCase().includes('restrict'));
+        if (rowIndex === 0) {
+          console.log('🔍 All columns containing "restrict":', restrictKeys);
+          restrictKeys.forEach(key => {
+            console.log(`   - "${key}": ${row[key]}`);
+          });
+        }
+        
+        // Look for the exact pattern "Restricted-Use Stock"
+        const restrictedKey = keys.find(key => {
+          const lowerKey = key.toLowerCase();
+          return lowerKey.includes('restricted-use stock') ||
+                 lowerKey.includes('restricted-use') ||
+                 lowerKey.includes('restricted use stock') ||
+                 lowerKey.includes('restricted use') ||
+                 (lowerKey.includes('restricted') && !lowerKey.includes('unrestricted'));
+        });
+        
+        if (rowIndex === 0) {
+          console.log(`🔍 Found restricted key: "${restrictedKey}", value: ${restrictedKey ? row[restrictedKey] : 'NOT FOUND'}`);
+        }
+        
+        return restrictedKey ? row[restrictedKey] : 0;
+      };
+
       const storageLocation = safeString(findValue('storage location'));
       const stockInTransfer = safeNumber(findValue('transfer'));
       
@@ -163,7 +193,7 @@ class InventoryService {
         unrestricted: safeNumber(findValue('unrestricted')),
         stockInTransfer: stockInTransfer,
         inQualityInsp: safeNumber(findValue('quality')),
-        restrictedUseStock: safeNumber(findValue('restricted')),
+        restrictedUseStock: safeNumber(findRestrictedValue()),
         blocked: safeNumber(findValue('blocked')),
         valueUnrestricted: safeNumber(findValue('value')),
         totalShelfLife: safeNumber(findValue('shelf')),
@@ -172,7 +202,17 @@ class InventoryService {
         batch: safeString(findValue('batch')),
       };
 
-      console.log(`Processed object item ${rowIndex + 1}:`, processedItem);
+      // Debug log for first few items to check field mapping
+      if (rowIndex < 2) {
+        console.log(`🔍 Processed object item ${rowIndex + 1}:`, {
+          material: processedItem.material,
+          unrestricted: processedItem.unrestricted,
+          restrictedUseStock: processedItem.restrictedUseStock,
+          blocked: processedItem.blocked,
+          availableColumns: Object.keys(row).filter(key => key.toLowerCase().includes('restrict')),
+          rawRowSample: Object.keys(row).slice(0, 10).reduce((obj, key) => ({...obj, [key]: row[key]}), {})
+        });
+      }
       return processedItem;
     }).filter(item => item !== null);
   }
@@ -193,6 +233,27 @@ class InventoryService {
       return index;
     };
 
+    // Helper to get restricted stock column index
+    const getRestrictedColumnIndex = (): number => {
+      let index = headers.findIndex((header: any) => {
+        const lowerHeader = String(header).trim().toLowerCase();
+        return lowerHeader.includes('restricted-use stock') ||
+               lowerHeader.includes('restricted-use') ||
+               lowerHeader.includes('restricted use stock') ||
+               lowerHeader.includes('restricted use');
+      });
+      
+      // Fallback to generic 'restricted' if specific patterns not found
+      if (index === -1) {
+        index = headers.findIndex((header: any) => {
+          const lowerHeader = String(header).trim().toLowerCase();
+          return lowerHeader.includes('restricted') && !lowerHeader.includes('unrestricted');
+        });
+      }
+      
+      return index;
+    };
+
     // Define column mappings
     const columnMapping = {
       material: getColumnIndex('material'),
@@ -203,7 +264,7 @@ class InventoryService {
       unrestricted: getColumnIndex('unrestricted'),
       stockInTransfer: getColumnIndex('transfer'),
       inQualityInsp: getColumnIndex('quality'),
-      restrictedUseStock: getColumnIndex('restricted'),
+      restrictedUseStock: getRestrictedColumnIndex(),
       blocked: getColumnIndex('blocked'),
       valueUnrestricted: getColumnIndex('value'),
       totalShelfLife: getColumnIndex('shelf life'),
@@ -213,6 +274,11 @@ class InventoryService {
     };
 
     console.log('Column mapping:', columnMapping);
+    
+    // Debug: Show all headers containing "restrict"
+    const restrictHeaders = headers.filter((header: any) => String(header).toLowerCase().includes('restrict'));
+    console.log('🔍 All headers containing "restrict":', restrictHeaders);
+    console.log('🔍 Restricted column index found:', columnMapping.restrictedUseStock);
     
     this.inventoryData = dataRows.map((row: any[], rowIndex: number) => {
       // Helper function to safely parse numbers
@@ -364,12 +430,29 @@ class InventoryService {
     }
 
     const filteredData = this.filterData(filters);
+    
+    const totalBlocked = this.sum(filteredData, ['blocked']);
+    const totalUnrestricted = this.sum(filteredData, ['unrestricted']);
+    const totalRestricted = this.sum(filteredData, ['restrictedUseStock']);
 
-    return {
+    // Debug logging to check individual values
+    console.log('📊 Individual Stock Calculations:', {
+      totalUnrestricted: totalUnrestricted,
+      totalRestricted: totalRestricted,
+      totalBlocked: totalBlocked,
+      sampleItems: filteredData.slice(0, 2).map(item => ({
+        material: item.material,
+        unrestricted: item.unrestricted,
+        restrictedUseStock: item.restrictedUseStock,
+        blocked: item.blocked
+      }))
+    });
+
+    const metrics = {
       totalInventory: this.sum(filteredData, ['unrestricted', 'stockInTransfer', 'inQualityInsp', 'restrictedUseStock', 'blocked']),
-      totalBlocked: this.sum(filteredData, ['blocked']),
-      totalUnrestricted: this.sum(filteredData, ['unrestricted']),
-      totalRestricted: this.sum(filteredData, ['restrictedUseStock']),
+      totalBlocked: totalBlocked,
+      totalUnrestricted: totalUnrestricted,
+      totalRestricted: totalRestricted,
       totalInTransfer: this.sum(filteredData, ['stockInTransfer']),
       totalInQualityInsp: this.sum(filteredData, ['inQualityInsp']),
       totalInventoryValue: this.calculateTotalValue(filteredData),
@@ -379,6 +462,16 @@ class InventoryService {
       totalInTransferValue: this.calculateInTransferValue(filteredData),
       totalInQualityInspValue: this.calculateInQualityInspValue(filteredData),
     };
+    
+    console.log('📊 Final Metrics for Dashboard:', {
+      totalInventory: metrics.totalInventory,
+      totalBlocked: metrics.totalBlocked,
+      totalUnrestricted: metrics.totalUnrestricted,
+      totalRestricted: metrics.totalRestricted,
+      dataCount: filteredData.length
+    });
+    
+    return metrics;
   }
 
   getLocationStats(filters?: DrillDownFilter): LocationStats[] {
@@ -600,7 +693,8 @@ class InventoryService {
     return data.reduce((total, item) => {
       return total + fields.reduce((fieldTotal, field) => {
         const value = item[field];
-        return fieldTotal + (typeof value === 'number' ? value : 0);
+        const numValue = typeof value === 'number' ? value : (typeof value === 'string' ? parseFloat(value) || 0 : 0);
+        return fieldTotal + numValue;
       }, 0);
     }, 0);
   }
